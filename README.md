@@ -9,7 +9,13 @@ Fullstack-Entwicklung eines Routenplanungstool im Wahlpflichtprojekt des Informa
 - Projektplan erstellen (vorerst in der README)
   - Markdown-Linting via "markdownlint" VSCode-Addon von David Anson
 - Projekt aufsetzen
-  - C++17 (oder sind C++20-Features erwünscht?), CMake
+  - C++17 (oder sind C++20-Features erwünscht?)
+  - CMake
+    - Zur Performanceänderung beachte Compile-Flags
+      - set(CMAKE_BUILD_TYPE "Debug")
+        - zu Release ändern
+      - set(COMPILE_FLAGS "-Wall -Wextra -Wpedantic -Wno-unused-parameter --std=c++17 -g")
+        - -g auf -O2 oder -O3 ändern
 - Datenverarbeitung
 - Algorithmen und Datenstrukturen
 - Analysieren anhand von Beispiel
