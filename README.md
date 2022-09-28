@@ -4,6 +4,17 @@ Fullstack-Entwicklung eines Routenplanungstool im Wahlpflichtprojekt des Informa
 
 ------------------
 
+## Build Instructions
+
+- git clone https://github.com/mibbels/Routenplanung
+- mkdir Build
+- cd Build
+- cmake ..
+- make -jX
+  - X := durch die Anzahl der gewünschten Threads ersetzen
+
+------------------
+
 ## Grobe Planung
 
 - Projektplan erstellen (vorerst in der README)
