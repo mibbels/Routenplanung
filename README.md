@@ -1,5 +1,7 @@
 # Routenplanung
 
+[![codefactor.io](https://www.codefactor.io/repository/github/mibbels/routenplanung/badge)](https://www.codefactor.io/repository/github/mibbels/routenplanung)
+
 Fullstack-Entwicklung eines Routenplanungstool im Wahlpflichtprojekt des Informatik Masters der HSNR im Wintersemester 2022/23
 
 ------------------
@@ -22,7 +24,7 @@ Fullstack-Entwicklung eines Routenplanungstool im Wahlpflichtprojekt des Informa
 - Projekt aufsetzen
   - C++17 (oder sind C++20-Features erwünscht?)
   - CMake
-    - Zur Performanceänderung beachte Compile-Flags
+    - Zu Performanceänderungen Compile-Flags beachten
       - set(CMAKE_BUILD_TYPE "Debug")
         - zu Release ändern
       - set(COMPILE_FLAGS "-Wall -Wextra -Wpedantic -Wno-unused-parameter --std=c++17 -g")
