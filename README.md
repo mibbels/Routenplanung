@@ -1,48 +1,79 @@
-Projektplan erstellen
-Algorithmen und Datenstrukturen implementieren 
-	- Analysieren anhand von Beispiel
-Dokumentation 
+# Routenplanung
 
-Zeitplan
-Projektabgabe vorraussichtlich Woche 19. - 23. Dezember <br>
-Vortrag 04.01.2023 <br>
-Abgabe Dokumentation etwas später? <br>
-Sep.   1     Termin <br>
-Okt.   4     Termine <br>
-Nov.   5    Termine <br>
-Dez.   2/3 Termine <br>
+Fullstack-Entwicklung eines Routenplanungstool im Wahlpflichtprojekt des Informatik Masters der HSNR im Wintersemester 2022/23
 
 ------------------
 
-- OSM Daten einlesen
-    - Mit [OSMfilter](https://wiki.openstreetmap.org/wiki/Osmfilter) commandline-tool Informationen wie Autor, Version etc. entfernen.
-    - SAX-Parser zum Einlesen der Datei [??]
-    - Einfügen in externe Datenstrukturen zur weiteren Verarbeitung
-	- Externe Datenstrukturen - [STxxL](https://stxxl.org/)
-        - Datenstrukturen (vector, map, etc.) und Algorithmen (find, sort, ...)
-		- Graphalgorithmen benutzen wahrscheinlich [priorityqueue](https://stxxl.org/tags/1.4.1/design_pqueue.html)
+## Grobe Planung
 
+- Projektplan erstellen (vorerst in der README)
+  - Markdown-Linting via "markdownlint" VSCode-Addon von David Anson
+- Projekt aufsetzen
+  - C++17 (oder sind C++20-Features erwünscht?), CMake
+- Datenverarbeitung
+- Algorithmen und Datenstrukturen
+- Analysieren anhand von Beispiel
+- Präsentation
+- Dokumentation
 
-	- Datenstrukturen für die Graphen - [Boost Graph Libary](https://www.boost.org/doc/libs/1_80_0/libs/graph/doc/)
-		- oder selbst zu implementierende Datenstrukturen wie [hier](https://algo2.iti.kit.edu/schultes/hwy/mobileSubmit.pdf) 
+------------------
+
+## Zeitplan (tbd := to be determined)
+
+### Anforderungen
+
+- Projektabgabe: Woche 19.12.22 - 23.12.22 (tbd)
+- Vortrag/Präsentation: Am 04.01.2023 (tbd)
+- Dokumentation: Mitte - Ende Januar (tbd)
+
+### Termine
+
+- Sep. 2 Termine
+- Okt. 4 Termine
+- Nov. 5 Termine
+- Dez. 3 Termine
+
+------------------
+
+## Implementierung
+
+### Core
+
+- OSM-Daten mit [OSMfilter](https://wiki.openstreetmap.org/wiki/Osmfilter) einlesen und Commandline-Tool zur Entfernung von Informationen wie Autor, Version etc. nutzen
+- SAX-Parser zum Einlesen der Datei [???]
+  - Einfügen in externe Datenstrukturen zur weiteren Verarbeitung
+    - Externe Datenstrukturen - [STxxL](https://stxxl.org/)
+      - Datenstrukturen (vector, map, etc.) und Algorithmen (find, sort, ...)
+    - Graphalgorithmen benutzen wahrscheinlich [priorityqueue](https://stxxl.org/tags/1.4.1/design_pqueue.html)
+      - Datenstrukturen für die Graphen - [Boost Graph Libary](https://www.boost.org/doc/libs/1_80_0/libs/graph/doc/)
+      - oder selbst zu implementierende Datenstrukturen wie [hier](https://algo2.iti.kit.edu/schultes/hwy/mobileSubmit.pdf)
         - in-memory möglich?
 
---------------------	
+------------------
 
-- Vorverarbeitung
-    - Reduzieren von Knoten, die auf gleicher Straße liegen. Heißt alle adjazenten Knoten vom Grad zwei zusammenfassen.
-    - Optimierung für weniger cache-misses  durch geo-hashing 
-        - sorgt für lokalität der Daten (Knoten)
-		
----------------------
+### Vorverarbeitung
 
-Verschiedene Algorithmen implementieren und Resultate und Laufzeiten vergleichen
-- "Auswirkungen der external memory Datenstrukturen untersuchen"
+- Reduzieren von Knoten, die auf gleicher Straße liegen. Heißt alle adjazenten Knoten vom Grad zwei zusammenfassen
+- Optimierung für weniger Cache-misses (durch Geo-Hashing)
+  - sorgt für Lokalität der Daten (Knoten)
 
----------------
+------------------
 
-Abiegeinformationen hinzufügen z.B. durch Kantengraph oder internen Graphen pro Kreuzung 
+### Algorithmen
 
------------------------
+- Verschiedene Algorithmen implementieren und Resultate/Laufzeiten vergleichen
+  - "Auswirkungen der external memory Datenstrukturen untersuchen"
 
-Darstellung GUI
+------------------
+
+### Nachverarbeitung
+
+- Abiegeinformationen hinzufügen (z.B. durch Kantengraph oder internen Graphen pro Kreuzung)
+
+------------------
+
+### Visualisierung (low prio)
+
+- Darstellung der Route (???)
+- GUI (???)
+- Welches Framework (SFML???)
