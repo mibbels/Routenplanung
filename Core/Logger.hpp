@@ -6,8 +6,8 @@ namespace Core
 {
     class Logger
     {
-    public:
-        Logger() = delete;
-        static void Init();
+        public:
+            Logger() = delete;
+            static void Init();
     };
 }

@@ -1,2 +1,5 @@
 /.idea
 /cmake-build-debug
+*.pbf
+*.osm
+*.o5m

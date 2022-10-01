@@ -13,11 +13,12 @@ set(COMPILE_FLAGS "-Wall -Wextra -Wpedantic -Wno-unused-parameter --std=c++17 -g
 set(CORE_LINKER_FLAGS "")
 set(APP_LINKER_FLAGS "")
 
+
 ############################### Core ########################################
 
 # source files
 file(GLOB_RECURSE SRC_CORE Core/*.cpp)
-file(GLOB_RECURSE SRC_EASYLOG Vendor/easylogging*.cpp)
+file(GLOB_RECURSE SRC_EASYLOG Vendor/easylogging/*.cpp)
 
 # compile to a static library
 add_library(RouteCore STATIC ${SRC_CORE} ${SRC_EASYLOG})
@@ -41,6 +42,7 @@ set(CMAKE_CXX_FLAGS "${COMPILE_FLAGS} ${STXXL_CXX_FLAGS}")
 
 # add STXXL includes path
 include_directories(${STXXL_INCLUDE_DIRS})
+
 
 ############################### Application #################################
 

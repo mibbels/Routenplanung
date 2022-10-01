@@ -1,18 +1,15 @@
 #include "Logger.hpp"
 #include "Datatypes.hpp"
+#include "Parser.hpp"
 
 int main()
 {
     Core::Logger::Init();
     LOG(INFO) << "##### Routenplanung #####";
 
-    Core::i32vec myVector;
-    for(int i = 0; i < 1024 * 1024; i++)
-    {
-        myVector.push_back(i + 2);
-    }
-
-    LOG(INFO) << myVector[99];
+    Core::ui8vec o5m_RawDataVector;
+    Core::Parser::ReadIn_o5m(o5m_RawDataVector, "../Res/regbez-duesseldorf-streets.o5m");
+    Core::Parser::Display(o5m_RawDataVector, 7);
 
     return 0;
 }
