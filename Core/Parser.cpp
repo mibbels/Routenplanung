@@ -15,11 +15,57 @@ namespace Core
         return true;
     }
 
+    void Parser::ProcessNode(uint32_t nodeCount, uint8_t dataLength, const ui8vec& nodeData)
+    {
+        //Display raw data stream
+        Utility::Display_ui8vec(nodeData, nodeData.size());
+
+        //Storage
+        uint8_t  version = 0;
+        uint8_t  lengthOfId = 0;
+        uint32_t id = 0;
+
+        //Find version byte and length of id in raw data
+        for(uint32_t i = 0; i < nodeData.size(); i++)
+        {
+            //By finding 0x00
+            if(nodeData.at(i) == 0x00)
+            {
+                version = nodeData.at(i - 1);
+                lengthOfId = i - 1;
+                break;
+            }
+        }
+
+        //Calculate id
+        //TODO: Decode delta encoding
+        for(uint32_t i = 0; i < lengthOfId; i++)
+        {
+            id += nodeData.at(i);
+        }
+
+        //Create node
+        Node node
+        {
+            nodeCount,
+            dataLength,
+            id,
+            version,
+            51.1758304f, //Placeholder for now
+            7.238217f,   //Placeholder for now
+        };
+
+        Utility::Display_Node(node);
+    }
+
     void Parser::ReadIn_o5m(o5mFile& fileStatistics, const std::string& filepath)
     {
         //Open the file
         std::streampos fileSize;
         std::ifstream file(filepath, std::ios::binary);
+
+        ui8vec nodeData0;
+        bool processedNode0 = false;
 
         if(file)
         {
@@ -30,7 +76,7 @@ namespace Core
             file.seekg(0, std::ios::beg);
 
             //Temporary storage
-            uint8_t currentByte[1];
+            uint8_t currentByte[1] = {0};
 
             //Read data byte by byte
             for(uint32_t i = 0; i < fileSize; i++)
@@ -52,18 +98,25 @@ namespace Core
                     fileSize -= 1;
                     uint8_t lengthOfData = currentByte[0];
 
-                    //printf("Node: ");
-
                     //For every byte of node data
                     for(uint32_t j = 0; j < lengthOfData; j++)
                     {
                         //Read next byte
                         file.read((char*)&currentByte[0], sizeof(uint8_t));
                         fileSize -= 1;
-                        //printf("0x%02x ", currentByte[0]);
+
+                        if(!processedNode0)
+                        {
+                            nodeData0.push_back(currentByte[0]);
+                        }
                     }
 
-                    //printf("\n");
+                    if(!processedNode0)
+                    {
+                        ProcessNode(fileStatistics.nodeCount, lengthOfData, nodeData0);
+                    }
+
+                    processedNode0 = true;
 
                     //Increase node count
                     fileStatistics.nodeCount++;

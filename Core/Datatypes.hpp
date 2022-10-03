@@ -13,15 +13,17 @@ namespace Core
 
     struct o5mFile
     {
-        uint8_t  header[7];
-        uint32_t nodeCount;
+        uint8_t  header[7] = {0};
+        uint32_t nodeCount = 0;
     };
 
-    struct Node
+    struct __attribute__((__packed__)) Node
     {
+        uint32_t nodeCount;
+        uint8_t  dataLength;
         uint32_t id;
+        uint8_t  version;
         float    lat;
         float    lon;
-        uint8_t  version;
     };
 }

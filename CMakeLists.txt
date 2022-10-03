@@ -34,13 +34,13 @@ target_link_libraries(RouteCore ${CORE_LINKER_FLAGS})
 
 ############################### stxxl ########################################
 
-# include the STXXL library in my-project
+# include the STXXL library
 add_subdirectory(Vendor/stxxl)
 
-# apply STXXL CXXFLAGS to our configuration
+# apply STXXL CXXFLAGS to the configuration
 set(CMAKE_CXX_FLAGS "${COMPILE_FLAGS} ${STXXL_CXX_FLAGS}")
 
-# add STXXL includes path
+# add STXXL include paths
 include_directories(${STXXL_INCLUDE_DIRS})
 
 
