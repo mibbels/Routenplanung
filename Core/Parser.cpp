@@ -72,7 +72,7 @@ namespace Core
             //Get size
             file.seekg(0, std::ios::end);
             fileSize = file.tellg();
-            LOG(INFO) << "Opened file: " << filepath << " | Size: " << fileSize << " byte";
+            LOG(INFO) << "Opened file: " << filepath << " | Size: " << fileSize << " Byte";
             file.seekg(0, std::ios::beg);
 
             //Temporary storage
