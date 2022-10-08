@@ -2,6 +2,57 @@
 #include "Datatypes.hpp"
 #include "Parser.hpp"
 #include "Utility.hpp"
+#include "Graph.h"
+
+int TestGraph(std::string a_strInfile)
+{
+    std::string strLine, strTok;
+    std::ifstream in;
+    in.open(a_strInfile);
+
+    std::vector<Core::node*> vecNodes;
+    std::vector<Core::EdgeComponents> vecEdges;
+
+    std::vector<std::string> vecLineContents;
+
+    std::unordered_map<std::string, int> mapStringCodes;
+
+    if (!in)
+        return -1;
+
+    while (std::getline(in, strLine))
+    {
+        std::istringstream ssLine(strLine);
+
+        while (std::getline(ssLine, strTok, ','))
+        {
+            vecLineContents.push_back(strTok);
+        }
+    }
+
+    for (int i = 0; i < vecLineContents.size(); i+=3)
+    {
+        int iCodeA = std::hash<std::string>()(vecLineContents[i]);
+        int iCodeB = std::hash<std::string>()(vecLineContents[i + 1]);
+        mapStringCodes[vecLineContents[i]] = iCodeA;
+        mapStringCodes[vecLineContents[i + 1]] = iCodeB;
+
+        Core::node* a = new Core::node(iCodeA);
+        Core::node* b = new Core::node(iCodeB);
+
+        vecNodes.push_back(a);
+        vecNodes.push_back(b);
+
+        vecEdges.push_back(std::make_tuple(std::atoi(vecLineContents[i + 2].c_str()), iCodeA, iCodeB));
+    }
+
+    Core::graph* g = new Core::graph(vecNodes, vecEdges);
+    g->SetStringHashes(mapStringCodes);
+    auto vec = g->DijkstraShortestPath("a", "b");
+    g->PrintNodes(vec);
+
+    return 0;
+}
 
 int main()
 {
@@ -28,6 +79,8 @@ int main()
     auto res11 = Core::Utility::DeltaDecode_uInt32(&res4.at(0), res4.size()); // 16384
     auto res12 = Core::Utility::DeltaDecode_uInt32(&res5.at(0), res5.size()); // 65535
     auto res13 = Core::Utility::DeltaDecode_uInt32(&res6.at(0), res6.size()); // 125799
+
+    TestGraph("../Res/graph.txt");
 
     return 0;
 }

@@ -11,6 +11,8 @@ namespace Core
     typedef stxxl::VECTOR_GENERATOR<float>::result   f32vec;
     typedef stxxl::VECTOR_GENERATOR<double>::result  f64vec;
 
+    typedef std::tuple<int, int, int>                EdgeComponents;
+
     struct o5mFile
     {
         uint8_t  header[7] = {0};
