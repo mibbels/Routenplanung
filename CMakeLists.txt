@@ -21,7 +21,7 @@ file(GLOB_RECURSE SRC_CORE Core/*.cpp)
 file(GLOB_RECURSE SRC_EASYLOG Vendor/easylogging/*.cpp)
 
 # compile to a static library
-add_library(RouteCore STATIC ${SRC_CORE} ${SRC_EASYLOG} Core/Graph.cpp Core/Graph.h)
+add_library(RouteCore STATIC ${SRC_CORE} ${SRC_EASYLOG})
 
 # include directories
 target_include_directories(RouteCore PUBLIC Core)

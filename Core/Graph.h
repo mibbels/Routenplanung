@@ -5,17 +5,18 @@
 #include <sstream>
 #include <vector>
 #include <limits>
+#include <climits>          //Needed for compilation with linux
 #include <unordered_map>
 #include <unordered_set>
 #include <tuple>
 #include <algorithm>
-#include<queue>
+#include <queue>
 
 #include "Datatypes.hpp"
 #include "Logger.hpp"
 
 namespace Core
-    {
+{
     //--------------------------------------------------------------------------------------------------------------------//
     class node
     {
