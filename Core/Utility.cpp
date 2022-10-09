@@ -101,6 +101,50 @@ namespace Core
         return result;
     }
 
+    std::vector<uint8_t> Utility::DeltaEncode_Int32(int32_t value)
+    {
+        //msb := most significant bit
+        //MSB := MOST SIGNIFICANT BYTE
+
+        //Storage container
+        std::vector<uint8_t> result;
+
+        bool negativeValue = false;
+
+        //Value too large for this conversion function
+        if(value > pow(2, 28))
+        {
+            //Return empty vector
+            return result;
+        }
+
+        //Bit shift one to the left
+        value <<= 1;
+
+        if(value < 0)
+        {
+            value *= -1;
+            negativeValue = true;
+        }
+
+        //Encode value
+        result = DeltaEncode_uInt32(value);
+
+        if(negativeValue)
+        {
+            //Flip signed bit
+            result[0] |= 0x01;
+
+            //Correct result a bit
+            if(result[0] >= 3)
+            {
+                result[0] -= 2;
+            }
+        }
+
+        return result;
+    }
+
     uint32_t Utility::DeltaDecode_uInt32(const uint8_t* rawData, uint8_t dataLength)
     {
         uint32_t value = 0;
@@ -122,5 +166,10 @@ namespace Core
         }
 
         return value;
+    }
+
+    int32_t Utility::DeltaDecode_Int32(const uint8_t* rawData, uint8_t dataLength)
+    {
+        return 0;
     }
 }

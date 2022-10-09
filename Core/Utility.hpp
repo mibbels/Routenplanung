@@ -17,6 +17,8 @@ namespace Core
             static void    Display_ProgressBar(double percentage);
 
             static std::vector<uint8_t> DeltaEncode_uInt32(uint32_t value);
+            static std::vector<uint8_t> DeltaEncode_Int32 (int32_t  value);
             static uint32_t             DeltaDecode_uInt32(const uint8_t* rawData, uint8_t dataLength);
+            static int32_t              DeltaDecode_Int32 (const uint8_t* rawData, uint8_t dataLength);
     };
 }
