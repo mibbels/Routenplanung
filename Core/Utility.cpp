@@ -101,6 +101,10 @@ namespace Core
         return result;
     }
 
+    //Delta encoding of int32_t experiences some kind of precision loss when using very big numbers
+    //f.E: With DeltaEncode_Int32(14312677) the last byte should be 0x0d but its 0x06
+    //I think its due to the bit shifting that is going on internally. Ignore for now, decoding works just fine
+
     std::vector<uint8_t> Utility::DeltaEncode_Int32(int32_t value)
     {
         //msb := most significant bit
@@ -118,21 +122,21 @@ namespace Core
             return result;
         }
 
-        //Bit shift one to the left
-        value <<= 1;
-
         if(value < 0)
         {
             value *= -1;
             negativeValue = true;
         }
 
+        //Bit shift one to the left
+        value <<= 1;
+
         //Encode value
         result = DeltaEncode_uInt32(value);
 
         if(negativeValue)
         {
-            //Flip signed bit
+            //Set signed bit
             result[0] |= 0x01;
 
             //Correct result a bit
@@ -155,7 +159,7 @@ namespace Core
             uint8_t currentByte = rawData[i];
 
             //Check if msb is set
-            if (BitIsSet(rawData[i], 7))
+            if(BitIsSet(rawData[i], 7))
             {
                 //Negate first bit
                 currentByte &= 0x7f;
@@ -168,8 +172,29 @@ namespace Core
         return value;
     }
 
-    int32_t Utility::DeltaDecode_Int32(const uint8_t* rawData, uint8_t dataLength)
+    int32_t Utility::DeltaDecode_Int32(uint8_t* rawData, uint8_t dataLength)
     {
-        return 0;
+        int32_t value = 0;
+        bool    negativeValue = false;
+
+        //Check if lsb is set
+        if(BitIsSet(rawData[0], 0))
+        {
+            negativeValue = true;
+        }
+
+        //Decode value
+        value = (int32_t)DeltaDecode_uInt32(rawData, dataLength);
+
+        //Bit shift one to the right
+        value >>= 1;
+
+        if(negativeValue)
+        {
+            value++;
+            value *= -1;
+        }
+
+        return value;
     }
 }

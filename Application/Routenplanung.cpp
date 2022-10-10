@@ -85,10 +85,6 @@ int main()
 
     // ------- A few tests for int32_t delta encoding/decoding -------
 
-    //We experience some kind of precision loss when using very big numbers
-    //f.E: DeltaEncode_Int32(14312677) the last byte should be 0x0d but its 0x06
-    //I think its due to all the bit shifting that is going on internally
-
     auto res01 = Core::Utility::DeltaEncode_Int32(-65);      // => 0x81 0x01
     auto res02 = Core::Utility::DeltaEncode_Int32(-3);       // => 0x05
     auto res03 = Core::Utility::DeltaEncode_Int32(-2);       // => 0x03
@@ -96,9 +92,24 @@ int main()
     auto res11 = Core::Utility::DeltaEncode_Int32(64);       // => 0x80 0x01
     auto res12 = Core::Utility::DeltaEncode_Int32(2952);     // => 0x90 0x2e
     auto res13 = Core::Utility::DeltaEncode_Int32(125799);   // => 0xce 0xad 0x0f
-    auto res14 = Core::Utility::DeltaEncode_Int32(3999478);  // => 0xec 0x9b 0xe8 0x03
-    auto res15 = Core::Utility::DeltaEncode_Int32(11560506); // => 0xf4 0x98 0x83 0x0b
-    auto res16 = Core::Utility::DeltaEncode_Int32(14312677); // => 0xca 0x93 0xd3 0x0d
+    //auto res14 = Core::Utility::DeltaEncode_Int32(3999478);  // => 0xec 0x9b 0xe8 0x03
+    //auto res15 = Core::Utility::DeltaEncode_Int32(11560506); // => 0xf4 0x98 0x83 0x0b
+    //auto res16 = Core::Utility::DeltaEncode_Int32(14312677); // => 0xca 0x93 0xd3 0x0d
+
+    std::vector<uint8_t> res14 = {0xec, 0x9b, 0xe8, 0x03};
+    std::vector<uint8_t> res15 = {0xf4, 0x98, 0x83, 0x0b};
+    std::vector<uint8_t> res16 = {0xca, 0x93, 0xd3, 0x0d};
+
+    auto res01d = Core::Utility::DeltaDecode_Int32(&res01.at(0), res01.size());  //      -65
+    auto res02d = Core::Utility::DeltaDecode_Int32(&res02.at(0), res02.size());  //       -3
+    auto res03d = Core::Utility::DeltaDecode_Int32(&res03.at(0), res03.size());  //       -2
+    auto res10d = Core::Utility::DeltaDecode_Int32(&res10.at(0), res10.size());  //        4
+    auto res11d = Core::Utility::DeltaDecode_Int32(&res11.at(0), res11.size());  //       64
+    auto res12d = Core::Utility::DeltaDecode_Int32(&res12.at(0), res12.size());  //     2952
+    auto res13d = Core::Utility::DeltaDecode_Int32(&res13.at(0), res13.size());  //   125799
+    auto res14d = Core::Utility::DeltaDecode_Int32(&res14.at(0), res14.size());  //  3999478
+    auto res15d = Core::Utility::DeltaDecode_Int32(&res15.at(0), res15.size());  // 11560506
+    auto res16d = Core::Utility::DeltaDecode_Int32(&res16.at(0), res16.size());  // 14312677
 
     return 0;
 }
