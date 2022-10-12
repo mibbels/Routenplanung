@@ -23,6 +23,19 @@ namespace Core
         return false;
     }
 
+     bool Utility::ArrayCompareContent(const uint8_t* fileData, const uint8_t* compareData, uint8_t dataSize)
+     {
+         for(uint32_t i = 0; i < dataSize; i++)
+         {
+             if(fileData[i] != compareData[i])
+             {
+                 return false;
+             }
+         }
+
+         return true;
+     }
+
     void Utility::Display_ui8vec(const ui8vec& vector, const uint8_t numberOfBytes)
     {
         //Sanity check
@@ -36,10 +49,10 @@ namespace Core
         }
     }
 
-    void Utility::Display_Node(const Node& node)
+    void Utility::Display_Node(const Node_t& node)
     {
-        printf("Node %d | data: %d byte | id: %d | version: %d | lat: %2.4f | lon: %2.4f\n",
-               node.nodeCount, node.dataLength, node.id, node.version, node.lat, node.lon);
+        printf("Node %d | id: %d | lat: %2.6f | lon: %2.6f | version: %d | data: %d Byte \n\n",
+               node.nodeCount, node.id, node.lat, node.lon, node.version, node.dataLength);
     }
 
     void Utility::Display_ProgressBar(double percentage)
@@ -174,8 +187,7 @@ namespace Core
 
     int32_t Utility::DeltaDecode_Int32(uint8_t* rawData, uint8_t dataLength)
     {
-        int32_t value = 0;
-        bool    negativeValue = false;
+        bool negativeValue = false;
 
         //Check if lsb is set
         if(BitIsSet(rawData[0], 0))
@@ -184,7 +196,7 @@ namespace Core
         }
 
         //Decode value
-        value = (int32_t)DeltaDecode_uInt32(rawData, dataLength);
+        int32_t value = (int32_t)DeltaDecode_uInt32(rawData, dataLength);
 
         //Bit shift one to the right
         value >>= 1;
@@ -197,4 +209,11 @@ namespace Core
 
         return value;
     }
+
+    GPS_t Utility::DeltaDecode_Floats(const uint8_t* rawData, uint8_t dataLength)
+    {
+        GPS_t gps = {0.0f, 0.0f};
+
+        return gps;
+    };
 }

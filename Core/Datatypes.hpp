@@ -13,19 +13,25 @@ namespace Core
 
     typedef std::tuple<int, int, int>                EdgeComponents;
 
-    struct o5mFile
+    struct o5mFile_t
     {
         uint8_t  header[7] = {0};
         uint32_t nodeCount = 0;
     };
 
-    struct __attribute__((__packed__)) Node
+    struct __attribute__((__packed__)) Node_t
     {
         uint32_t nodeCount;
-        uint8_t  dataLength;
         uint32_t id;
-        uint8_t  version;
         float    lat;
         float    lon;
+        uint8_t  version;
+        uint8_t  dataLength;
+    };
+
+    struct GPS_t
+    {
+        float lat;
+        float lon;
     };
 }

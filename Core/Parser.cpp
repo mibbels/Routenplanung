@@ -2,70 +2,60 @@
 
 namespace Core
 {
-    bool Parser::CheckForContentAt(const uint8_t* fileData, const uint8_t* compareData, uint32_t dataSize)
-    {
-        for(uint32_t i = 0; i < dataSize; i++)
-        {
-            if(fileData[i] != compareData[i])
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     void Parser::ProcessNode(uint32_t nodeCount, uint8_t dataLength, const ui8vec& nodeData)
     {
+        static uint32_t currentID = 0;
+
         //Display raw data stream
         Utility::Display_ui8vec(nodeData, nodeData.size());
 
         //Storage
-        uint8_t  version = 0;
-        uint8_t  lengthOfId = 0;
-        uint32_t id = 0;
+        std::vector<uint8_t> rawID;
 
-        //Find version byte and length of id in raw data
-        for(uint32_t i = 0; i < nodeData.size(); i++)
+        uint8_t index = 0;
+
+        //Find 0x00 byte (byte after version) to get the id in raw data
+        while(nodeData.at(index + 1) != 0x00)
         {
-            //By finding 0x00
-            if(nodeData.at(i) == 0x00)
-            {
-                version = nodeData.at(i - 1);
-                lengthOfId = i - 1;
-                break;
-            }
+            rawID.push_back(nodeData.at(index));
+            index++;
         }
 
-        //Calculate id
-        //TODO: Decode delta encoding
-        for(uint32_t i = 0; i < lengthOfId; i++)
-        {
-            id += nodeData.at(i);
-        }
+        //Get id out of raw data stream
+        uint32_t id = Utility::DeltaDecode_Int32(&rawID.at(0), rawID.size());
+
+        //Add last id's
+        currentID += id;
+
+        //Get version out of raw data stream and increment index
+        uint8_t version = nodeData.at(index++);
+
+        //Get latitude and longitude
+        auto gps = Utility::DeltaDecode_Floats(&nodeData.at(index), dataLength - index);
+        float lat = gps.lat;
+        float lon = gps.lon;
 
         //Create node
-        Node node
+        Node_t node
         {
             nodeCount,
-            dataLength,
-            id,
+            currentID,
+            lat,
+            lon,
             version,
-            51.1758304f, //Placeholder for now
-            7.238217f,   //Placeholder for now
+            dataLength,
         };
 
         Utility::Display_Node(node);
     }
 
-    void Parser::ReadIn_o5m(o5mFile& fileStatistics, const std::string& filepath)
+    void Parser::ReadIn_o5m(o5mFile_t& fileStatistics, const std::string& filepath)
     {
         //Open the file
         std::streampos fileSize;
         std::ifstream file(filepath, std::ios::binary);
 
         ui8vec nodeData0;
-        bool processedNode0 = false;
 
         if(file)
         {
@@ -105,18 +95,17 @@ namespace Core
                         file.read((char*)&currentByte[0], sizeof(uint8_t));
                         fileSize -= 1;
 
-                        if(!processedNode0)
+                        if(fileStatistics.nodeCount < 10)
                         {
                             nodeData0.push_back(currentByte[0]);
                         }
                     }
 
-                    if(!processedNode0)
+                    if(fileStatistics.nodeCount < 10)
                     {
                         ProcessNode(fileStatistics.nodeCount, lengthOfData, nodeData0);
+                        nodeData0.clear();
                     }
-
-                    processedNode0 = true;
 
                     //Increase node count
                     fileStatistics.nodeCount++;
@@ -135,18 +124,18 @@ namespace Core
         }
     }
 
-    void Parser::ShowStatistics(const o5mFile& fileStatistics)
+    void Parser::ShowStatistics(const o5mFile_t& fileStatistics)
     {
         LOG(INFO) << "##### File statistics #####";
 
         uint8_t headerData0[7] = {0xff, 0xe0, 0x04, 0x6f, 0x35, 0x6d, 0x32};
         uint8_t headerData1[7] = {0xff, 0xe0, 0x04, 0x6f, 0x35, 0x63, 0x32};
 
-        if(CheckForContentAt(&fileStatistics.header[0], &headerData0[0], sizeof(headerData0)))
+        if(Utility::ArrayCompareContent(&fileStatistics.header[0], &headerData0[0], sizeof(headerData0)))
         {
             LOG(INFO) << "Type: 'o5m2'";
         }
-        else if(CheckForContentAt(&fileStatistics.header[0], &headerData0[1], sizeof(headerData1)))
+        else if(Utility::ArrayCompareContent(&fileStatistics.header[0], &headerData0[1], sizeof(headerData1)))
         {
             LOG(INFO) << "Type: 'o5c2'";
         }
