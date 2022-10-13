@@ -151,7 +151,7 @@ namespace Core
                 mapDistance[iNodeCode] = 0;
             }
 
-            mapPreviousNode[iNodeCode] = 0;
+            mapPreviousNode[iNodeCode] = NULL;
             PQ.push(std::make_pair(iNodeCode, mapDistance[iNodeCode]));
         }
 
@@ -205,6 +205,118 @@ namespace Core
         {
             vecShortestPath.push_back(m_mapNodes.at(iNodeCode));
             iNodeCode = mapPreviousNode[iNodeCode];
+
+            if (iNodeCode == iStartNodeHash)
+            {
+                vecShortestPath.push_back(m_mapNodes.at(iNodeCode));
+            }
+        }
+
+        std::reverse(vecShortestPath.begin(), vecShortestPath.end());
+        return vecShortestPath;
+    }
+
+    //--------------------------------------------------------------------------------------------------------------------//
+    int h(int a_iCurrentNode, int a_iEndNode)
+    {
+        /*
+         * heuristic-function estimating the cost of navigating from current- to end-node.
+         * if h(x,y) = 0 for all Nodes x,y, a* algorithm equals dijkstra's algorithm.
+         *
+         * an example for a heuristic could b the absolute or quadratic difference between the x,y coordinates
+         * of the nodes.
+         */
+
+         return 0;
+    }
+    std::vector<node*> graph::a_starShortestPath(std::string a_strStartNodeName, std::string a_strEndNodeName) const
+    {
+        std::vector<node*>      vecShortestPath;
+        std::unordered_set<int> setVisited;
+
+        int                     iNodeCode;
+        int                     derivedDistance;
+        int                     guessedDistance;
+        int iStartNodeHash =    m_mapStringHashes.at(a_strStartNodeName);
+        int iEndNodeHash =      m_mapStringHashes.at(a_strEndNodeName);
+
+        auto compare  = [](std::pair<int, int> a, std::pair<int, int> b){return a.second > b.second;};
+        std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, decltype(compare)> openlist(compare );
+
+        std::vector<edge*> vecNeighbours;
+        std::unordered_map<int, int> mapDistance;
+        //std::unordered_map<int, int> mapGuessedDistance;
+        std::unordered_map<int, int> mapPreviousNode;
+
+        mapPreviousNode.reserve(m_mapNodes.size());
+        mapDistance.reserve(m_mapNodes.size());
+        //mapGuessedDistance.reserve(m_mapNodes.size());
+
+        for (std::pair<int, node*> NodeEntry: m_mapNodes)
+        {
+            iNodeCode = NodeEntry.second->m_iNameCode;
+            if (iNodeCode != iStartNodeHash)
+            {
+                mapDistance[iNodeCode] = INT_MAX;
+                //mapGuessedDistance[iNodeCode] = INT_MAX;
+            }
+            else
+            {
+                mapDistance[iNodeCode] = 0;
+                //mapGuessedDistance[iNodeCode] = 0;
+            }
+
+            mapPreviousNode[iNodeCode] = NULL;
+            openlist.push(std::make_pair(iNodeCode, mapDistance[iNodeCode]));
+        }
+
+        while (openlist.size() != 0)
+        {
+            std::pair<int, int> PQNodePair = openlist.top();
+            openlist.pop();
+
+            if (setVisited.find(PQNodePair.first) == setVisited.end())
+            {
+                setVisited.insert(PQNodePair.first);
+            }
+            else
+            {
+                continue;
+            }
+
+            try
+            {
+                vecNeighbours = m_mapEdges.at(PQNodePair.first);
+            }
+            catch(std::out_of_range)
+            {
+                continue;
+            }
+
+            for (edge* e : vecNeighbours)
+            {
+
+                derivedDistance = mapDistance.at(PQNodePair.first) + e->m_uiWeight;
+                if (derivedDistance < mapDistance.at(e->m_iNameCodeEnd))
+                {
+                    mapPreviousNode[e->m_iNameCodeEnd] = PQNodePair.first;
+                    mapDistance.at(e->m_iNameCodeEnd) = derivedDistance;
+
+                    /* guess the presumed cost of navigating from the neighbour to the end-node
+                     */
+                    guessedDistance = derivedDistance + h(e->m_iNameCodeEnd,iEndNodeHash);
+                    //mapGuessedDistance.at(e->m_iNameCodeEnd) = guessedDistance; //unnecessary?
+
+                    openlist.push(std::make_pair(e->m_iNameCodeEnd, guessedDistance));
+                }
+            }
+        }
+
+        iNodeCode = iEndNodeHash;
+        while (iNodeCode != iStartNodeHash)
+        {
+            vecShortestPath.push_back(m_mapNodes.at(iNodeCode));
+            iNodeCode = mapPreviousNode.at(iNodeCode);
 
             if (iNodeCode == iStartNodeHash)
             {

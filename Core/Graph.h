@@ -57,6 +57,9 @@ namespace Core
         std::vector<node*> DijkstraShortestPath(std::string a_strStartNodeName,
                                                 std::string a_strEndNodeName) const;
 
+        std::vector<node*> a_starShortestPath(std::string a_strStartNodeName,
+                                              std::string a_strEndNodeName) const;
+
     private:
         // map code to original name
         std::unordered_map<std::string, int>        m_mapStringHashes;

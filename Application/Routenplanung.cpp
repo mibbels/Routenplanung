@@ -47,9 +47,11 @@ int32_t TestGraph(const std::string& a_strInfile)
 
     Core::graph* g = new Core::graph(vecNodes, vecEdges);
     g->SetStringHashes(mapStringCodes);
-    auto vec = g->DijkstraShortestPath("a", "b");
-    g->PrintNodes(vec);
-
+    auto vec1 = g->DijkstraShortestPath("R", "a");
+    auto vec2 = g->a_starShortestPath("R", "a");
+    g->PrintNodes(vec1);
+    LOG(INFO) << "-----------";
+    g->PrintNodes(vec2);
 
     return 0;
 }
@@ -59,11 +61,11 @@ int32_t main()
     Core::Logger::Init();
     LOG(INFO) << "##### Routenplanung #####";
 
-    Core::o5mFile_t fileStatistics;
-    Core::Parser::ReadIn_o5m(fileStatistics, "../Res/regbez-duesseldorf-streets-clean0.o5m");
-    Core::Parser::ShowStatistics(fileStatistics);
+    //Core::o5mFile_t fileStatistics;
+    //Core::Parser::ReadIn_o5m(fileStatistics, "../Res/regbez-duesseldorf-streets-clean0.o5m");
+    //Core::Parser::ShowStatistics(fileStatistics);
 
-    //TestGraph("../Res/graph.txt");
+    TestGraph("../Res/graph.txt");
 
     return 0;
 }
