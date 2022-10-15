@@ -5,9 +5,11 @@ namespace Core
     void Parser::ProcessNode(uint32_t nodeCount, uint8_t dataLength, const ui8vec& nodeData)
     {
         static uint32_t currentID = 0;
+        static double   currentLat = 0.0;
+        static double   currentLon = 0.0;
 
         //Display raw data stream
-        Utility::Display_ui8vec(nodeData, nodeData.size());
+        //Utility::Display_ui8vec(nodeData, nodeData.size());
 
         //Storage
         std::vector<uint8_t> rawID;
@@ -30,20 +32,41 @@ namespace Core
         //Get version out of raw data stream and increment index
         uint8_t version = nodeData.at(index++);
 
+        //Increment index if current byte is a zero (buffer) byte
+        if(nodeData.at(index) == 0x00)
+        {
+            index++;
+        }
+
+        uint8_t secondFloatIndex = 0;
+
+        //Get starting index of second float
+        for(uint8_t i = index; i < dataLength - index; i++)
+        {
+            uint8_t byte = nodeData.at(index);
+
+            if(Utility::BitIsSet(byte, 7))
+            {
+                secondFloatIndex++;
+            }
+            else
+            {
+                break;
+            }
+        }
+
         //Get latitude and longitude
-        auto gps = Utility::DeltaDecode_Floats(&nodeData.at(index), dataLength - index);
-        float lat = gps.lat;
-        float lon = gps.lon;
+        currentLon += Utility::DeltaDecode_Float(&nodeData.at(index), secondFloatIndex);
+        index += secondFloatIndex;
+        currentLat += Utility::DeltaDecode_Float(&nodeData.at(index), dataLength - index);
 
         //Create node
         Node_t node
         {
             nodeCount,
             currentID,
-            lat,
-            lon,
-            version,
-            dataLength,
+            currentLat,
+            currentLon,
         };
 
         Utility::Display_Node(node);
@@ -83,6 +106,9 @@ namespace Core
                 //Process node
                 else if(currentByte[0] == 0x10)
                 {
+                    //Increase node count
+                    fileStatistics.nodeCount++;
+
                     //Read next byte (should be the length of the payload)
                     file.read((char*)&currentByte[0], sizeof(uint8_t));
                     fileSize -= 1;
@@ -95,20 +121,17 @@ namespace Core
                         file.read((char*)&currentByte[0], sizeof(uint8_t));
                         fileSize -= 1;
 
-                        if(fileStatistics.nodeCount < 10)
+                        if(fileStatistics.nodeCount <= 50)
                         {
                             nodeData0.push_back(currentByte[0]);
                         }
                     }
 
-                    if(fileStatistics.nodeCount < 10)
+                    if(fileStatistics.nodeCount <= 50)
                     {
                         ProcessNode(fileStatistics.nodeCount, lengthOfData, nodeData0);
                         nodeData0.clear();
                     }
-
-                    //Increase node count
-                    fileStatistics.nodeCount++;
                 }
 
                 //Bloß nicht benutzen... ist scheiße langsam

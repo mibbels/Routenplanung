@@ -23,15 +23,7 @@ namespace Core
     {
         uint32_t nodeCount;
         uint32_t id;
-        float    lat;
-        float    lon;
-        uint8_t  version;
-        uint8_t  dataLength;
-    };
-
-    struct GPS_t
-    {
-        float lat;
-        float lon;
+        double   lat;
+        double   lon;
     };
 }

@@ -51,8 +51,8 @@ namespace Core
 
     void Utility::Display_Node(const Node_t& node)
     {
-        printf("Node %d | id: %d | lat: %2.6f | lon: %2.6f | version: %d | data: %d Byte \n\n",
-               node.nodeCount, node.id, node.lat, node.lon, node.version, node.dataLength);
+        printf("id: %6d | lat: %2.7f | lon: %2.7f | Node %d \n",
+               node.id, node.lat, node.lon, node.nodeCount);
     }
 
     void Utility::Display_ProgressBar(double percentage)
@@ -83,7 +83,7 @@ namespace Core
         uint8_t byte0 = (value >> 0)  & 0x7f;
         uint8_t byte1 = (value >> 7)  & 0x7f;
         uint8_t byte2 = (value >> 14) & 0x7f;
-        uint8_t byte3 = (value >> 22) & 0x7f;
+        uint8_t byte3 = (value >> 22) & 0x7f; //Bug? Shouldn't it be value >> 21 ??
 
         //Create byte array
         uint8_t byteArray[4] = {byte0, byte1, byte2, byte3};
@@ -185,7 +185,7 @@ namespace Core
         return value;
     }
 
-    int32_t Utility::DeltaDecode_Int32(uint8_t* rawData, uint8_t dataLength)
+    int32_t Utility::DeltaDecode_Int32(const uint8_t* rawData, uint8_t dataLength)
     {
         bool negativeValue = false;
 
@@ -210,10 +210,8 @@ namespace Core
         return value;
     }
 
-    GPS_t Utility::DeltaDecode_Floats(const uint8_t* rawData, uint8_t dataLength)
+    double Utility::DeltaDecode_Float(const uint8_t* rawData, uint8_t dataLength)
     {
-        GPS_t gps = {0.0f, 0.0f};
-
-        return gps;
-    };
+        return (double)DeltaDecode_Int32(rawData, dataLength) / pow(10.0, 7.0);
+    }
 }

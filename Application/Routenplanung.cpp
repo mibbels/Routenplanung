@@ -61,11 +61,11 @@ int32_t main()
     Core::Logger::Init();
     LOG(INFO) << "##### Routenplanung #####";
 
-    //Core::o5mFile_t fileStatistics;
-    //Core::Parser::ReadIn_o5m(fileStatistics, "../Res/regbez-duesseldorf-streets-clean0.o5m");
-    //Core::Parser::ShowStatistics(fileStatistics);
+    Core::o5mFile_t fileStatistics;
+    Core::Parser::ReadIn_o5m(fileStatistics, "../Res/regbez-duesseldorf-streets-clean0.o5m");
+    Core::Parser::ShowStatistics(fileStatistics);
 
-    TestGraph("../Res/graph.txt");
+    //TestGraph("../Res/graph.txt");
 
     return 0;
 }
