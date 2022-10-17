@@ -1,6 +1,6 @@
 #include "Logger.hpp"
 #include "Datatypes.hpp"
-#include "Parser.hpp"
+#include "o5mFile.hpp"
 #include "Graph.h"
 
 int32_t TestGraph(const std::string& a_strInfile)
@@ -59,11 +59,12 @@ int32_t TestGraph(const std::string& a_strInfile)
 int32_t main()
 {
     Core::Logger::Init();
-    LOG(INFO) << "##### Routenplanung #####";
+    LOG(INFO) << "########### Routenplanung #############";
 
-    Core::o5mFile_t fileStatistics;
-    Core::Parser::ReadIn_o5m(fileStatistics, "../Res/regbez-duesseldorf-streets-clean0.o5m");
-    Core::Parser::ShowStatistics(fileStatistics);
+    Core::o5mFile duesseldorfStreets;
+    duesseldorfStreets.ReadIn("../Res/regbez-duesseldorf-streets-clean0.o5m");
+    duesseldorfStreets.DisplayStatistics();
+    duesseldorfStreets.DisplayNodes();
 
     //TestGraph("../Res/graph.txt");
 

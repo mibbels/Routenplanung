@@ -36,7 +36,7 @@ namespace Core
          return true;
      }
 
-    void Utility::Display_ui8vec(const ui8vec& vector, const uint8_t numberOfBytes)
+    void Utility::Display_ui8Vec(const std::vector<uint8_t>& vector, uint8_t numberOfBytes)
     {
         //Sanity check
         if(numberOfBytes <= vector.size())
@@ -47,12 +47,6 @@ namespace Core
             }
             printf("\n");
         }
-    }
-
-    void Utility::Display_Node(const Node_t& node)
-    {
-        printf("id: %6d | lat: %2.7f | lon: %2.7f | Node %d \n",
-               node.id, node.lat, node.lon, node.nodeCount);
     }
 
     void Utility::Display_ProgressBar(double percentage)

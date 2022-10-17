@@ -12,8 +12,7 @@ namespace Core
             static bool    ArrayGotValue(const uint8_t* arr, uint8_t length, uint8_t index);
             static bool    ArrayCompareContent(const uint8_t* fileData, const uint8_t* compareData, uint8_t dataSize);
 
-            static void    Display_ui8vec(const ui8vec& vector, uint8_t numberOfBytes);
-            static void    Display_Node(const Node_t& node);
+            static void    Display_ui8Vec(const std::vector<uint8_t>& vector, uint8_t numberOfBytes);
             static void    Display_ProgressBar(double percentage);
 
             static std::vector<uint8_t> DeltaEncode_uInt32(uint32_t value);

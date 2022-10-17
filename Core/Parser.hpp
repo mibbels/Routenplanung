@@ -10,11 +10,7 @@ namespace Core
 {
     class Parser
     {
-        private:
-            static void ProcessNode(uint32_t nodeCount, uint8_t dataLength, const ui8vec& nodeData);
-
         public:
-            static void ReadIn_o5m(o5mFile_t& fileStatistics, const std::string& filepath);
-            static void ShowStatistics(const o5mFile_t& fileStatistics);
+            static Node_t ProcessNode(uint32_t nodeCount, const std::vector<uint8_t>& nodeData, uint8_t dataLength);
     };
 }
