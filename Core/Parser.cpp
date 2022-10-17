@@ -8,56 +8,50 @@ namespace Core
         static double   currentLat = 0.0;
         static double   currentLon = 0.0;
 
-        //Display raw data stream
-        //Utility::Display_ui8vec(nodeData, nodeData.size());
-
-        //Storage
-        std::vector<uint8_t> rawID;
-
         uint8_t index = 0;
 
-        //Find 0x00 byte (byte after version) to get the id in raw data
-        while(nodeData.at(index + 1) != 0x00)
+        //Display raw data stream
+        Utility::Display_ui8vec(nodeData, nodeData.size());
+
+        //Find index of the first 0x00 byte (it's the byte after the version)
+        while(nodeData.at(index) != 0x00)
         {
-            rawID.push_back(nodeData.at(index));
             index++;
         }
 
-        //Get id out of raw data stream
-        uint32_t id = Utility::DeltaDecode_Int32(&rawID.at(0), rawID.size());
+        //Get id delta out of raw data stream
+        uint32_t id = Utility::DeltaDecode_Int32(&nodeData.at(0), index - 1);
 
-        //Add last id's
+        //Add id delta
         currentID += id;
 
-        //Get version out of raw data stream and increment index
-        uint8_t version = nodeData.at(index++);
+        //Get version out of raw data stream
+        uint8_t version = nodeData.at(index - 1);
 
-        //Increment index if current byte is a zero (buffer) byte
+        //Increment index if current byte is a 0x00 (buffer) byte
         if(nodeData.at(index) == 0x00)
         {
             index++;
         }
-
-        uint8_t secondFloatIndex = 0;
-
-        //Get starting index of second float
-        for(uint8_t i = index; i < dataLength - index; i++)
+        else
         {
-            uint8_t byte = nodeData.at(index);
-
-            if(Utility::BitIsSet(byte, 7))
-            {
-                secondFloatIndex++;
-            }
-            else
-            {
-                break;
-            }
+            //TODO: Fehlerbehandlung
+            //Hier dürften wir nämlich nie landen, ansonsten ist der raw byte stream korrupt
         }
 
+        //Find starting index of second float while remembering starting index of first float
+        uint8_t firstFloatIndex = index;
+        while(Utility::BitIsSet(nodeData.at(index), 7))
+        {
+            index++;
+        }
+        index++;
+
+        //Calculate length of first float
+        uint8_t firstFloatLength = index - firstFloatIndex;
+
         //Get latitude and longitude
-        currentLon += Utility::DeltaDecode_Float(&nodeData.at(index), secondFloatIndex);
-        index += secondFloatIndex;
+        currentLon += Utility::DeltaDecode_Float(&nodeData.at(firstFloatIndex), firstFloatLength);
         currentLat += Utility::DeltaDecode_Float(&nodeData.at(index), dataLength - index);
 
         //Create node
