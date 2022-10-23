@@ -39,6 +39,13 @@ namespace Core
     {
         int iNodeCode;
 
+        // -------
+        // TODO test-only
+        for (auto a : a_vecEdges){
+            m_vecEdges.push_back(ComponentsToEdge(a));
+        }
+        // ------
+
         for (node* pNode : a_vecNodes)
         {
             //TODO check already inserted or ignore
@@ -91,6 +98,7 @@ namespace Core
             }
             m_mapEdges[iCurrStartNode] = vecNeighbourEdges;
         }
+
     }
 
     //--------------------------------------------------------------------------------------------------------------------//
@@ -213,6 +221,7 @@ namespace Core
         }
 
         std::reverse(vecShortestPath.begin(), vecShortestPath.end());
+        //LOG(INFO) << mapDistance[iEndNodeHash];
         return vecShortestPath;
     }
 
@@ -324,6 +333,81 @@ namespace Core
             }
         }
 
+        std::reverse(vecShortestPath.begin(), vecShortestPath.end());
+        //LOG(INFO) << mapDistance[iEndNodeHash];
+        return vecShortestPath;
+    }
+
+    //--------------------------------------------------------------------------------------------------------------------//
+    std::vector<node*> graph::BellmanFordShortestPath(std::string a_strStartNodeName, std::string a_strEndNodeName) const
+    {
+
+        std::vector<node*>      vecShortestPath;
+        int                     iNodeCode;
+        int iStartNodeHash =    m_mapStringHashes.at(a_strStartNodeName);
+        int iEndNodeHash =      m_mapStringHashes.at(a_strEndNodeName);
+
+        std::unordered_map<int, int> mapDistance;
+        std::unordered_map<int, int> mapPreviousNode;
+
+        mapPreviousNode.reserve(m_mapNodes.size());
+        mapDistance.reserve(m_mapNodes.size());
+
+        for (std::pair<int, node*> NodeEntry: m_mapNodes)
+        {
+            iNodeCode = NodeEntry.second->m_iNameCode;
+            if (iNodeCode != iStartNodeHash)
+            {
+                mapDistance[iNodeCode] = INT_MAX;
+            }
+            else
+            {
+                mapDistance[iNodeCode] = 0;
+            }
+
+            mapPreviousNode[iNodeCode] = NULL;
+        }
+
+        for (int i = 1; i < m_mapNodes.size(); i++)
+        {
+            for (std::pair<int, std::vector<edge*>> EdgePair : m_mapEdges)
+            {
+                for (edge* e : EdgePair.second)
+                {
+                    if (mapDistance[e->m_iNameCodeStart] + e->m_uiWeight < mapDistance[e->m_iNameCodeEnd])
+                    {
+                        mapDistance[e->m_iNameCodeEnd] = mapDistance[e->m_iNameCodeStart] + e->m_uiWeight;
+                        mapPreviousNode[e->m_iNameCodeEnd] = e->m_iNameCodeStart;
+                    }
+                }
+            }
+
+            //TODO test-only
+            /*
+            for (edge* e : m_vecEdges)
+            {
+                if (mapDistance[e->m_iNameCodeStart] + e->m_uiWeight < mapDistance[e->m_iNameCodeEnd])
+                {
+                    mapDistance[e->m_iNameCodeEnd] = mapDistance[e->m_iNameCodeStart] + e->m_uiWeight;
+                    mapPreviousNode[e->m_iNameCodeEnd] = e->m_iNameCodeStart;
+                }
+            }
+            */
+        }
+
+        /*
+        iNodeCode = iEndNodeHash;
+        while (iNodeCode != iStartNodeHash)
+        {
+            vecShortestPath.push_back(m_mapNodes.at(iNodeCode));
+            iNodeCode = mapPreviousNode[iNodeCode];
+
+            if (iNodeCode == iStartNodeHash)
+            {
+                vecShortestPath.push_back(m_mapNodes.at(iNodeCode));
+            }
+        }
+         */
         std::reverse(vecShortestPath.begin(), vecShortestPath.end());
         return vecShortestPath;
     }

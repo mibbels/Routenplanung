@@ -49,9 +49,12 @@ int32_t TestGraph(const std::string& a_strInfile)
     g->SetStringHashes(mapStringCodes);
     auto vec1 = g->DijkstraShortestPath("R", "a");
     auto vec2 = g->a_starShortestPath("R", "a");
+    auto vec3 = g->BellmanFordShortestPath("R", "a");
     g->PrintNodes(vec1);
     LOG(INFO) << "-----------";
     g->PrintNodes(vec2);
+    LOG(INFO) << "-----------";
+    g->PrintNodes(vec3);
 
     return 0;
 }
