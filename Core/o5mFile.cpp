@@ -2,6 +2,15 @@
 
 namespace Core
 {
+    o5mFile::o5mFile()
+    {
+        //Init string reference table
+        for(uint32_t i = 0; i < STRING_TABLE_SIZE; i++)
+        {
+            _stringPairTable.at(i) = {"Placeholder (1)", "Placeholder (2)"};
+        }
+    }
+
     void o5mFile::ReadIn(const std::string& filepath)
     {
         //Open the file
@@ -34,7 +43,7 @@ namespace Core
                     _header[i] = currentByte[0];
                 }
 
-                    //Process node
+                //Process node
                 else if(currentByte[0] == 0x10)
                 {
                     //Read next byte (should be the length of the payload)
@@ -49,15 +58,26 @@ namespace Core
                         file.read((char*)&currentByte[0], sizeof(uint8_t));
                         fileSize -= 1;
 
-                        if(_nodeVector.size() <= 7334)
+                        if(_nodeVector.size() <= 7335)
                         {
                             rawNodes.push_back(currentByte[0]);
                         }
                     }
 
-                    if(_nodeVector.size() <= 7334)
+                    if(_nodeVector.size() <= 7335)
                     {
-                        _nodeVector.push_back(Parser::ProcessNode(_nodeVector.size(), rawNodes, lengthOfData));
+                        _nodeVector.push_back
+                        (
+                            Utility::ProcessNode
+                            (
+                                _nodeVector.size(),
+                                rawNodes,
+                                lengthOfData,
+                                &_stringPairTable,
+                                &_currentTableIndex
+                            )
+                        );
+
                         rawNodes.clear();
                     }
                 }
@@ -96,6 +116,7 @@ namespace Core
         }
 
         LOG(INFO) << "NodeCount: " << _nodeVector.size();
+        LOG(INFO) << "StringCount: " << _currentTableIndex - 1;
     }
 
     void o5mFile::DisplayNodes()
@@ -104,9 +125,21 @@ namespace Core
 
         for(uint32_t i = 0; i < _nodeVector.size(); i++)
         {
-            printf("id: %6d | lat: %2.7f | lon: %2.7f | Node %d \n",
-                   _nodeVector.at(i).id,  _nodeVector.at(i).lat,
-                   _nodeVector.at(i).lon, _nodeVector.at(i).nodeCount);
+            if(_nodeVector.at(i).stringTableIndex == 0)
+            {
+                printf("id: %6d | lat: %2.7f | lon: %2.7f | Node %d \n",
+                       _nodeVector.at(i).id, _nodeVector.at(i).lat,
+                       _nodeVector.at(i).lon, _nodeVector.at(i).nodeCount);
+            }
+            else
+            {
+                printf("id: %6d | lat: %2.7f | lon: %2.7f | Node %d \n",
+                       _nodeVector.at(i).id, _nodeVector.at(i).lat,
+                       _nodeVector.at(i).lon, _nodeVector.at(i).nodeCount);
+
+                std::cout << "\t\t\t k=\"" << _stringPairTable.at(_nodeVector.at(i).stringTableIndex).first
+                             << "\", v=\"" << _stringPairTable.at(_nodeVector.at(i).stringTableIndex).second << "\"\n";
+            }
         }
     }
 }
