@@ -5,6 +5,19 @@ namespace Core
     #define PBSTR   "############################################################"
     #define PBWIDTH 60
 
+    uint8_t Utility::GetLengthOfFloat(const std::vector<uint8_t>& nodeData, uint8_t currentIndex)
+    {
+        uint8_t startIndex = currentIndex;
+
+        while(Utility::BitIsSet(nodeData.at(currentIndex), 7))
+        {
+            currentIndex++;
+        }
+        currentIndex++;
+
+        return currentIndex - startIndex;
+    }
+
     bool Utility::BitIsSet(uint32_t value, uint32_t index)
     {
         return (value & (1 << index)) != 0;
@@ -23,18 +36,109 @@ namespace Core
         return false;
     }
 
-     bool Utility::ArrayCompareContent(const uint8_t* fileData, const uint8_t* compareData, uint8_t dataSize)
-     {
-         for(uint32_t i = 0; i < dataSize; i++)
-         {
-             if(fileData[i] != compareData[i])
-             {
-                 return false;
-             }
-         }
+    bool Utility::ArrayCompareContent(const uint8_t* fileData, const uint8_t* compareData, uint8_t dataSize)
+    {
+        for(uint32_t i = 0; i < dataSize; i++)
+        {
+            if(fileData[i] != compareData[i])
+            {
+                return false;
+            }
+        }
 
-         return true;
-     }
+        return true;
+    }
+
+    Node_t Utility::ProcessNode
+    (
+        uint32_t                    nodeCount,
+        const std::vector<uint8_t>& nodeData,
+        uint8_t                     dataLength,
+        stringPairTable_t*          strPairTable,
+        uint32_t*                   currTableIndex
+    )
+    {
+
+        static uint32_t currentID  = 0;
+        static double   currentLat = 0.0;
+        static double   currentLon = 0.0;
+
+        uint8_t index = 0;
+
+        //Display raw data stream
+        Utility::Display_ui8Vec(nodeData, nodeData.size());
+
+        //Find index of the first 0x00 byte (it's the byte after the version)
+        while(nodeData.at(index) != 0x00)
+        {
+            index++;
+        }
+
+        //Get id delta out of raw data stream
+        uint32_t id = Utility::DeltaDecode_Int32(&nodeData.at(0), index - 1);
+
+        //Add id delta
+        currentID += id;
+
+        //Get version out of raw data stream
+        //uint8_t version = nodeData.at(index - 1);
+
+        //Increment index if current byte is a 0x00 (buffer) byte
+        if(nodeData.at(index) == 0x00)
+        {
+            index++;
+        }
+        else
+        {
+            //TODO: Catch error. We should never get here, otherwise the raw data stream got bytes we didn't expect
+        }
+
+        //Get length of first float and increment index
+        uint8_t firstFloatIndex  = index;
+        uint8_t firstFloatLength = Utility::GetLengthOfFloat(nodeData, index);
+        index += firstFloatLength;
+
+        //Get length of second float and increment index
+        uint8_t secondFloatIndex  = index;
+        uint8_t secondFloatLength = Utility::GetLengthOfFloat(nodeData, index);
+        index += secondFloatLength;
+
+        //Get latitude and longitude delta
+        currentLon += Utility::DeltaDecode_Float(&nodeData.at(firstFloatIndex), firstFloatLength);
+        currentLat += Utility::DeltaDecode_Float(&nodeData.at(secondFloatIndex), secondFloatLength);
+
+        //If there is still data left to be processed
+        if(index < dataLength)
+        {
+            uint8_t  stringLength = dataLength - index;
+            uint32_t oldIndex     = *currTableIndex;
+
+            //TODO: This function should also be able to return a reference to a pair<string, string> that was already saved
+            strPairTable->at(oldIndex) = Utility::Decode_StringPair(&nodeData.at(index), stringLength);
+
+            //Increment index
+            (*currTableIndex)++;
+
+            return
+            {
+                nodeCount,
+                currentID,
+                currentLat,
+                currentLon,
+                oldIndex
+            };
+        }
+
+        //Else return node without additional string references
+        return
+        {
+            nodeCount,
+            currentID,
+            currentLat,
+            currentLon,
+            0
+        };
+    }
 
     void Utility::Display_ui8Vec(const std::vector<uint8_t>& vector, uint8_t numberOfBytes)
     {
@@ -207,5 +311,57 @@ namespace Core
     double Utility::DeltaDecode_Float(const uint8_t* rawData, uint8_t dataLength)
     {
         return (double)DeltaDecode_Int32(rawData, dataLength) / pow(10.0, 7.0);
+    }
+
+    stringPair_t Utility::Decode_StringPair(const uint8_t* nodeData, uint8_t stringLength)
+    {
+        uint8_t index = 0;
+
+        //Increment index if current byte is a 0x00 (buffer) byte
+        if(nodeData[index] == 0x00)
+        {
+            index++;
+        }
+        else
+        {
+            return {"Decode_StringPair()", "buffer byte wasn't 0x00"};
+        }
+
+        //Get starting index of next string
+        uint8_t startIndex = index;
+
+        while(nodeData[index] != 0x00)
+        {
+            index++;
+        }
+
+        //Get length of current string
+        uint8_t firstStringLength = index - startIndex;
+
+        //Parse first string
+        std::vector<char32_t> firstString;
+        for(uint32_t i = startIndex; i <= firstStringLength; i++)
+        {
+            firstString.push_back(nodeData[i]);
+        }
+
+        index++;
+
+        //TODO: Parse second string
+
+        //TODO: UTF-8-Decode both strings
+
+        /*#include <codecvt>
+        #include <locale>
+        #include <string>
+
+        std::string utf8 = u8"\U0000006f\U0000006e";
+        std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> convert;
+        auto res = convert.from_bytes(utf8);*/
+
+        return
+        {
+            "Test", "Test"
+        };
     }
 }
