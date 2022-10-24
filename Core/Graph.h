@@ -71,9 +71,6 @@ namespace Core
         std::unordered_map<int, node*>              m_mapNodes;
         // map code of starting node to vector of outgoing edges
         std::unordered_map<int, std::vector<edge*>> m_mapEdges;
-
-        // TODO test-only
-        std::vector<edge*>                          m_vecEdges;
     };
 }
 

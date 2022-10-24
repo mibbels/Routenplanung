@@ -39,13 +39,6 @@ namespace Core
     {
         int iNodeCode;
 
-        // -------
-        // TODO test-only
-        for (auto a : a_vecEdges){
-            m_vecEdges.push_back(ComponentsToEdge(a));
-        }
-        // ------
-
         for (node* pNode : a_vecNodes)
         {
             //TODO check already inserted or ignore
@@ -152,7 +145,7 @@ namespace Core
             iNodeCode = NodeEntry.second->m_iNameCode;
             if (iNodeCode != iStartNodeHash)
             {
-                mapDistance[iNodeCode] = INT_MAX;
+                mapDistance[iNodeCode] = INT_MAX/2;
             }
             else
             {
@@ -266,7 +259,7 @@ namespace Core
             iNodeCode = NodeEntry.second->m_iNameCode;
             if (iNodeCode != iStartNodeHash)
             {
-                mapDistance[iNodeCode] = INT_MAX;
+                mapDistance[iNodeCode] = INT_MAX/2;
                 //mapGuessedDistance[iNodeCode] = INT_MAX;
             }
             else
@@ -358,7 +351,7 @@ namespace Core
             iNodeCode = NodeEntry.second->m_iNameCode;
             if (iNodeCode != iStartNodeHash)
             {
-                mapDistance[iNodeCode] = INT_MAX;
+                mapDistance[iNodeCode] = INT_MAX * 0.5;
             }
             else
             {
@@ -374,6 +367,12 @@ namespace Core
             {
                 for (edge* e : EdgePair.second)
                 {
+                    if(e->m_iNameCodeEnd == iStartNodeHash) {
+                        auto test1 = mapDistance[iStartNodeHash];
+                        auto test2 = mapDistance[e->m_iNameCodeStart];
+                        bool b = mapDistance[e->m_iNameCodeStart] + e->m_uiWeight < mapDistance[e->m_iNameCodeEnd];
+                        int a = 1;
+                    }
                     if (mapDistance[e->m_iNameCodeStart] + e->m_uiWeight < mapDistance[e->m_iNameCodeEnd])
                     {
                         mapDistance[e->m_iNameCodeEnd] = mapDistance[e->m_iNameCodeStart] + e->m_uiWeight;
@@ -381,21 +380,9 @@ namespace Core
                     }
                 }
             }
-
-            //TODO test-only
-            /*
-            for (edge* e : m_vecEdges)
-            {
-                if (mapDistance[e->m_iNameCodeStart] + e->m_uiWeight < mapDistance[e->m_iNameCodeEnd])
-                {
-                    mapDistance[e->m_iNameCodeEnd] = mapDistance[e->m_iNameCodeStart] + e->m_uiWeight;
-                    mapPreviousNode[e->m_iNameCodeEnd] = e->m_iNameCodeStart;
-                }
-            }
-            */
         }
 
-        /*
+
         iNodeCode = iEndNodeHash;
         while (iNodeCode != iStartNodeHash)
         {
@@ -407,7 +394,7 @@ namespace Core
                 vecShortestPath.push_back(m_mapNodes.at(iNodeCode));
             }
         }
-         */
+
         std::reverse(vecShortestPath.begin(), vecShortestPath.end());
         return vecShortestPath;
     }
