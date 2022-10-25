@@ -4,12 +4,12 @@
 
 namespace Core
 {
-    #define STRING_TABLE_SIZE 1000
+    #define STRING_TABLE_SIZE 20000
 
     struct __attribute__((__packed__)) Node_t
     {
-        uint32_t nodeCount;
-        uint32_t id;
+        uint64_t nodeCount;
+        uint64_t id;
         double   lat;
         double   lon;
         uint32_t stringTableIndex;

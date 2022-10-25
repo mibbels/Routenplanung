@@ -58,13 +58,14 @@ namespace Core
                         file.read((char*)&currentByte[0], sizeof(uint8_t));
                         fileSize -= 1;
 
-                        if(_nodeVector.size() <= 7335)
+                        //TODO: Fix node id precision error. Happens between 195k and 198k
+                        if(_nodeVector.size() <= 195000)
                         {
                             rawNodes.push_back(currentByte[0]);
                         }
                     }
 
-                    if(_nodeVector.size() <= 7335)
+                    if(_nodeVector.size() <= 195000)
                     {
                         _nodeVector.push_back
                         (
@@ -83,8 +84,8 @@ namespace Core
                 }
 
                 //Bloß nicht benutzen... ist scheiße langsam
-                //Deswegen =>  TODO: File-Management multithreaden
                 //Utility::PrintProgressBar((double)i/(double)fileSize);
+                //TODO: File-Parsing & Displaying multithreaden
             }
 
             LOG(INFO) << "File has been read in!";
@@ -127,13 +128,13 @@ namespace Core
         {
             if(_nodeVector.at(i).stringTableIndex == 0)
             {
-                printf("id: %6d | lat: %2.7f | lon: %2.7f | Node %d \n",
+                printf("id: %11lu | lat: %2.7f | lon: %2.7f | Node %8lu \n",
                        _nodeVector.at(i).id, _nodeVector.at(i).lat,
                        _nodeVector.at(i).lon, _nodeVector.at(i).nodeCount);
             }
             else
             {
-                printf("id: %6d | lat: %2.7f | lon: %2.7f | Node %d \n",
+                printf("id: %11lu | lat: %2.7f | lon: %2.7f | Node %8lu \n",
                        _nodeVector.at(i).id, _nodeVector.at(i).lat,
                        _nodeVector.at(i).lon, _nodeVector.at(i).nodeCount);
 

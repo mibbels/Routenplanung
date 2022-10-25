@@ -66,7 +66,7 @@ namespace Core
         uint8_t index = 0;
 
         //Display raw data stream
-        Utility::Display_ui8Vec(nodeData, nodeData.size());
+        //Utility::Display_ui8Vec(nodeData, nodeData.size());
 
         //Find index of the first 0x00 byte (it's the byte after the version)
         while(nodeData.at(index) != 0x00)
@@ -107,36 +107,46 @@ namespace Core
         currentLon += Utility::DeltaDecode_Float(&nodeData.at(firstFloatIndex), firstFloatLength);
         currentLat += Utility::DeltaDecode_Float(&nodeData.at(secondFloatIndex), secondFloatLength);
 
-        //If there is still data left to be processed
+        //Set index reference to 0 (placeholder string)
+        uint32_t oldIndex = 0;
+
+        //If there is still data left to be processed (then there are <tags> with string pairs)
         if(index < dataLength)
         {
-            uint8_t  stringLength = dataLength - index;
-            uint32_t oldIndex     = *currTableIndex;
+            //Get current table index
+            oldIndex = *currTableIndex;
 
-            //TODO: This function should also be able to return a reference to a pair<string, string> that was already saved
-            strPairTable->at(oldIndex) = Utility::Decode_StringPair(&nodeData.at(index), stringLength);
+            //Get current byte
+            uint8_t currentByte = nodeData.at(index);
 
-            //Increment index
-            (*currTableIndex)++;
-
-            return
+            //Check if current byte is a 0x00 (buffer) byte
+            if(currentByte == 0x00)
             {
-                nodeCount,
-                currentID,
-                currentLat,
-                currentLon,
-                oldIndex
-            };
+                //Increment index
+                index++;
+
+                //Decode string pair and save it in table
+                strPairTable->at(oldIndex) = Utility::Decode_StringPair(&nodeData.at(index));
+
+                //Increment index
+                (*currTableIndex)++;
+            }
+
+            //Else it's an index reference to an already saved string pair
+            else
+            {
+                //Subtract delta (byte) from current table index
+                oldIndex -= currentByte;
+            }
         }
 
-        //Else return node without additional string references
         return
         {
             nodeCount,
             currentID,
             currentLat,
             currentLon,
-            0
+            oldIndex
         };
     }
 
@@ -313,9 +323,29 @@ namespace Core
         return (double)DeltaDecode_Int32(rawData, dataLength) / pow(10.0, 7.0);
     }
 
-    stringPair_t Utility::Decode_StringPair(const uint8_t* nodeData, uint8_t stringLength)
+    //This function returns the first string pair (k, v) from a <tag>
+    //If there are additional <tags> they will be discarded (for now)
+    stringPair_t Utility::Decode_StringPair(const uint8_t* nodeData)
     {
         uint8_t index = 0;
+
+        //Get ending byte of first string
+        uint8_t firstStringIndex = index;
+
+        while(nodeData[index] != 0x00)
+        {
+            index++;
+        }
+
+        //Calculate length of first string
+        uint8_t firstStringLength = index - firstStringIndex;
+
+        //Parse first string
+        std::string firstString;
+        for(uint32_t i = firstStringIndex; i < firstStringLength; i++)
+        {
+            firstString += (char)nodeData[i];
+        }
 
         //Increment index if current byte is a 0x00 (buffer) byte
         if(nodeData[index] == 0x00)
@@ -324,44 +354,36 @@ namespace Core
         }
         else
         {
-            return {"Decode_StringPair()", "buffer byte wasn't 0x00"};
+            return {"Error in string decoding", "First string wasn't null terminated"};
         }
 
-        //Get starting index of next string
-        uint8_t startIndex = index;
+        //Get ending byte of second string
+        uint8_t secondStringIndex = index;
 
         while(nodeData[index] != 0x00)
         {
             index++;
         }
 
-        //Get length of current string
-        uint8_t firstStringLength = index - startIndex;
+        //Calculate length of second string
+        uint8_t secondStringLength = index - secondStringIndex;
 
-        //Parse first string
-        std::vector<char32_t> firstString;
-        for(uint32_t i = startIndex; i <= firstStringLength; i++)
+        //Parse second string
+        std::string secondString;
+        for(uint32_t i = secondStringIndex; i < secondStringIndex + secondStringLength; i++)
         {
-            firstString.push_back(nodeData[i]);
+            secondString += (char)nodeData[i];
         }
 
-        index++;
-
-        //TODO: Parse second string
-
-        //TODO: UTF-8-Decode both strings
-
-        /*#include <codecvt>
-        #include <locale>
-        #include <string>
-
-        std::string utf8 = u8"\U0000006f\U0000006e";
-        std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> convert;
-        auto res = convert.from_bytes(utf8);*/
+        //Sanity check
+        if(nodeData[index] != 0x00)
+        {
+            return {"Error in string decoding", "Second string wasn't null terminated"};
+        }
 
         return
         {
-            "Test", "Test"
+            firstString, secondString
         };
     }
 }

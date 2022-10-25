@@ -32,6 +32,6 @@ namespace Core
             static uint32_t             DeltaDecode_uInt32(const uint8_t* rawData, uint8_t dataLength);
             static int32_t              DeltaDecode_Int32 (const uint8_t* rawData, uint8_t dataLength);
             static double               DeltaDecode_Float(const uint8_t* rawData, uint8_t dataLength);
-            static stringPair_t         Decode_StringPair(const uint8_t* rawData, uint8_t stringLength);
+            static stringPair_t         Decode_StringPair(const uint8_t* rawData);
     };
 }
