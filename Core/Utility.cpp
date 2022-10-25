@@ -225,7 +225,6 @@ namespace Core
     //Delta encoding of int32_t experiences some kind of precision loss when using very big numbers
     //f.E: With DeltaEncode_Int32(14312677) the last byte should be 0x0d but its 0x06
     //I think its due to the bit shifting that is going on internally. Ignore for now, decoding works just fine
-
     std::vector<uint8_t> Utility::DeltaEncode_Int32(int32_t value)
     {
         //msb := most significant bit

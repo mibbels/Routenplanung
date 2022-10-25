@@ -4,7 +4,7 @@ namespace Core
 {
     o5mFile::o5mFile()
     {
-        //Init string reference table
+        //Init string pair table
         for(uint32_t i = 0; i < STRING_TABLE_SIZE; i++)
         {
             _stringPairTable.at(i) = {"Placeholder (1)", "Placeholder (2)"};

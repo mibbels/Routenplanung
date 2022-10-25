@@ -23,7 +23,6 @@ namespace Core
                                 uint32_t*                   currTableIndex
                            );
 
-
             static void    Display_ui8Vec(const std::vector<uint8_t>& vector, uint8_t numberOfBytes);
             static void    Display_ProgressBar(double percentage);
 
