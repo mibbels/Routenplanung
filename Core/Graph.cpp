@@ -43,7 +43,11 @@ namespace Core
         {
             //TODO check already inserted or ignore
             iNodeCode = pNode->m_iNameCode;
-            m_mapNodes[iNodeCode] = pNode;
+            //m_mapNodes[iNodeCode] = pNode;
+            if (m_mapNodes.find(iNodeCode) == m_mapNodes.end())
+            {
+                m_mapNodes.insert(std::pair<int, node*>(iNodeCode,pNode));
+            }
         }
 
         /*
@@ -89,7 +93,10 @@ namespace Core
             {
                 vecNeighbourEdges.push_back(ComponentsToEdge(components));
             }
-            m_mapEdges[iCurrStartNode] = vecNeighbourEdges;
+
+            //m_mapEdges[iCurrStartNode] = vecNeighbourEdges;
+            edgeSet* e = new edgeSet(vecNeighbourEdges);
+            m_mapEdges.insert(std::pair<int, edgeSet*>(iCurrStartNode,e));
         }
 
     }
@@ -99,7 +106,8 @@ namespace Core
     {
         try
         {
-            return m_mapEdges.at(a_iNameCode);
+            mapIntEdgeSet::const_iterator it = m_mapEdges.find(a_iNameCode);
+            return it->second->edges;
         }
         catch (std::out_of_range &err)
         {
@@ -112,7 +120,9 @@ namespace Core
     {
         try
         {
-            return m_mapNodes.at(a_iNameCode);
+            //return m_mapNodes.at(a_iNameCode);
+            mapIntNodePointer::const_iterator it = m_mapNodes.find(a_iNameCode);
+            return &(*it->second);
         }
         catch (std::out_of_range &err)
         {
@@ -121,7 +131,7 @@ namespace Core
     }
 
     //--------------------------------------------------------------------------------------------------------------------//
-    std::vector<node*> graph::DijkstraShortestPath(std::string a_strStartNodeName, std::string a_strEndNodeName) const
+    std::vector<node*> graph::DijkstraShortestPath(std::string a_strStartNodeName, std::string a_strEndNodeName)
     {
 
         std::vector<node*>      vecShortestPath;
@@ -178,7 +188,8 @@ namespace Core
 
             try
             {
-                vecNeighbours = m_mapEdges.at(PQNodePair.first);
+                //vecNeighbours = m_mapEdges.at(PQNodePair.first);
+                vecNeighbours = m_mapEdges[PQNodePair.first]->edges;
             }
             catch(std::out_of_range)
             {
@@ -204,12 +215,14 @@ namespace Core
         iNodeCode = iEndNodeHash;
         while (iNodeCode != iStartNodeHash)
         {
-            vecShortestPath.push_back(m_mapNodes.at(iNodeCode));
+            //vecShortestPath.push_back(m_mapNodes.at(iNodeCode));
+            vecShortestPath.push_back(m_mapNodes[iNodeCode]);
             iNodeCode = mapPreviousNode[iNodeCode];
 
             if (iNodeCode == iStartNodeHash)
             {
-                vecShortestPath.push_back(m_mapNodes.at(iNodeCode));
+                //vecShortestPath.push_back(m_mapNodes.at(iNodeCode));
+                vecShortestPath.push_back(m_mapNodes[iNodeCode]);
             }
         }
 
@@ -231,7 +244,7 @@ namespace Core
 
          return 0;
     }
-    std::vector<node*> graph::a_starShortestPath(std::string a_strStartNodeName, std::string a_strEndNodeName) const
+    std::vector<node*> graph::a_starShortestPath(std::string a_strStartNodeName, std::string a_strEndNodeName)
     {
         std::vector<node*>      vecShortestPath;
         std::unordered_set<int> setVisited;
@@ -288,7 +301,8 @@ namespace Core
 
             try
             {
-                vecNeighbours = m_mapEdges.at(PQNodePair.first);
+                //vecNeighbours = m_mapEdges.at(PQNodePair.first);
+                vecNeighbours = m_mapEdges[PQNodePair.first]->edges;
             }
             catch(std::out_of_range)
             {
@@ -317,12 +331,14 @@ namespace Core
         iNodeCode = iEndNodeHash;
         while (iNodeCode != iStartNodeHash)
         {
-            vecShortestPath.push_back(m_mapNodes.at(iNodeCode));
+            //vecShortestPath.push_back(m_mapNodes.at(iNodeCode));
+            vecShortestPath.push_back(m_mapNodes[iNodeCode]);
             iNodeCode = mapPreviousNode.at(iNodeCode);
 
             if (iNodeCode == iStartNodeHash)
             {
-                vecShortestPath.push_back(m_mapNodes.at(iNodeCode));
+                //vecShortestPath.push_back(m_mapNodes.at(iNodeCode));
+                vecShortestPath.push_back(m_mapNodes[iNodeCode]);
             }
         }
 
@@ -332,7 +348,7 @@ namespace Core
     }
 
     //--------------------------------------------------------------------------------------------------------------------//
-    std::vector<node*> graph::BellmanFordShortestPath(std::string a_strStartNodeName, std::string a_strEndNodeName) const
+    std::vector<node*> graph::BellmanFordShortestPath(std::string a_strStartNodeName, std::string a_strEndNodeName)
     {
 
         std::vector<node*>      vecShortestPath;
@@ -363,9 +379,11 @@ namespace Core
 
         for (int i = 1; i < m_mapNodes.size(); i++)
         {
-            for (std::pair<int, std::vector<edge*>> EdgePair : m_mapEdges)
+            //for (std::pair<int, std::vector<edge*>> EdgePair : m_mapEdges)
+            for (std::pair<int, edgeSet*> EdgePair : m_mapEdges)
             {
-                for (edge* e : EdgePair.second)
+                //for (edge* e : EdgePair.second)
+                for (edge* e : EdgePair.second->edges)
                 {
                     if(e->m_iNameCodeEnd == iStartNodeHash) {
                         auto test1 = mapDistance[iStartNodeHash];
@@ -386,12 +404,14 @@ namespace Core
         iNodeCode = iEndNodeHash;
         while (iNodeCode != iStartNodeHash)
         {
-            vecShortestPath.push_back(m_mapNodes.at(iNodeCode));
+            //vecShortestPath.push_back(m_mapNodes.at(iNodeCode));
+            vecShortestPath.push_back(m_mapNodes[iNodeCode]);
             iNodeCode = mapPreviousNode[iNodeCode];
 
             if (iNodeCode == iStartNodeHash)
             {
-                vecShortestPath.push_back(m_mapNodes.at(iNodeCode));
+                //vecShortestPath.push_back(m_mapNodes.at(iNodeCode));
+                vecShortestPath.push_back(m_mapNodes[iNodeCode]);
             }
         }
 

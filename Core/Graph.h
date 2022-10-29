@@ -43,6 +43,23 @@ namespace Core
         int     m_iNameCodeEnd;
     };
 
+    struct edgeSet
+    {
+        edgeSet(std::vector<edge*> a_vecEdges){edges = a_vecEdges;};
+        std::vector<edge*> edges;
+    };
+
+    struct compare_gt
+    {
+        bool operator () (const int & a, const int & b) const
+        { return a > b; }
+        static int max_value()
+        { return std::numeric_limits<int>::min(); }
+    };
+
+    typedef stxxl::map<int, node*, compare_gt, 4096, 4096> mapIntNodePointer;
+    typedef stxxl::map<int, edgeSet*, compare_gt, 4096, 4096> mapIntEdgeSet;
+
     class graph
     {
     public:
@@ -55,22 +72,29 @@ namespace Core
         std::vector<edge*> GetEdge(int a_iNameCode) const;
 
         std::vector<node*> DijkstraShortestPath(std::string a_strStartNodeName,
-                                                std::string a_strEndNodeName) const;
+                                                std::string a_strEndNodeName);
 
         std::vector<node*> a_starShortestPath(std::string a_strStartNodeName,
-                                              std::string a_strEndNodeName) const;
+                                              std::string a_strEndNodeName);
 
         std::vector<node*> BellmanFordShortestPath(std::string a_strStartNodeName,
-                                                   std::string a_strEndNodeName) const;
+                                                   std::string a_strEndNodeName);
 
 
     private:
         // map code to original name
         std::unordered_map<std::string, int>        m_mapStringHashes;
+
         // map code to node-object
-        std::unordered_map<int, node*>              m_mapNodes;
+        mapIntNodePointer  m_mapNodes{(mapIntNodePointer::node_block_type::raw_size) * 3,
+        (mapIntNodePointer::leaf_block_type::raw_size) * 3};
+        //std::unordered_map<int, node*>              m_mapNodes;
+
         // map code of starting node to vector of outgoing edges
-        std::unordered_map<int, std::vector<edge*>> m_mapEdges;
+        //std::unordered_map<int, std::vector<edge*>> m_mapEdges;
+
+        mapIntEdgeSet m_mapEdges{(mapIntEdgeSet::node_block_type::raw_size) * 3,
+                                        (mapIntEdgeSet::leaf_block_type::raw_size) * 3};
     };
 }
 
