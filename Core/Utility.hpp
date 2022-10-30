@@ -8,7 +8,7 @@ namespace Core
     class Utility
     {
         private:
-            static uint8_t GetLengthOfFloat(const std::vector<uint8_t>& nodeData, uint8_t currentIndex);
+            static uint8_t GetLengthOfValue(const std::vector<uint8_t>& nodeData, uint8_t currentIndex);
 
         public:
             static bool    BitIsSet(uint32_t value, uint32_t index);

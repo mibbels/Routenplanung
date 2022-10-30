@@ -5,7 +5,7 @@ namespace Core
     #define PBSTR   "############################################################"
     #define PBWIDTH 60
 
-    uint8_t Utility::GetLengthOfFloat(const std::vector<uint8_t>& nodeData, uint8_t currentIndex)
+    uint8_t Utility::GetLengthOfValue(const std::vector<uint8_t>& nodeData, uint8_t currentIndex)
     {
         uint8_t startIndex = currentIndex;
 
@@ -58,49 +58,33 @@ namespace Core
         uint32_t*                   currTableIndex
     )
     {
-
-        static uint32_t currentID  = 0;
+        static uint64_t currentID  = 0;
         static double   currentLat = 0.0;
         static double   currentLon = 0.0;
 
         uint8_t index = 0;
 
-        //Display raw data stream
-        //Utility::Display_ui8Vec(nodeData, nodeData.size());
+        //Get length of id and add delta to ongoing id value
+        uint64_t idLength = Utility::GetLengthOfValue(nodeData, index);
+        currentID        += Utility::DeltaDecode_Int32(&nodeData.at(index), idLength);
 
-        //Find index of the first 0x00 byte (it's the byte after the version)
+        //Increment index while it's not a zero to skip all version bytes
         while(nodeData.at(index) != 0x00)
         {
             index++;
         }
 
-        //Get id delta out of raw data stream
-        uint32_t id = Utility::DeltaDecode_Int32(&nodeData.at(0), index - 1);
-
-        //Add id delta
-        currentID += id;
-
-        //Get version out of raw data stream
-        //uint8_t version = nodeData.at(index - 1);
-
-        //Increment index if current byte is a 0x00 (buffer) byte
-        if(nodeData.at(index) == 0x00)
-        {
-            index++;
-        }
-        else
-        {
-            //TODO: Catch error. We should never get here, otherwise the raw data stream got bytes we didn't expect
-        }
+        //Increment index (next byte is beginning of first float)
+        index++;
 
         //Get length of first float and increment index
         uint8_t firstFloatIndex  = index;
-        uint8_t firstFloatLength = Utility::GetLengthOfFloat(nodeData, index);
+        uint8_t firstFloatLength = Utility::GetLengthOfValue(nodeData, index);
         index += firstFloatLength;
 
         //Get length of second float and increment index
         uint8_t secondFloatIndex  = index;
-        uint8_t secondFloatLength = Utility::GetLengthOfFloat(nodeData, index);
+        uint8_t secondFloatLength = Utility::GetLengthOfValue(nodeData, index);
         index += secondFloatLength;
 
         //Get latitude and longitude delta

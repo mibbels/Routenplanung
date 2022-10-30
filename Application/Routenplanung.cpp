@@ -67,7 +67,9 @@ int32_t main()
     Core::o5mFile duesseldorfStreets;
     duesseldorfStreets.ReadIn("../Res/regbez-duesseldorf-streets-clean0.o5m");
     duesseldorfStreets.DisplayStatistics();
-    duesseldorfStreets.DisplayNodes();
+    //duesseldorfStreets.DisplayAllNodes();
+    duesseldorfStreets.DisplayFirstThreeNodes();
+    duesseldorfStreets.DisplayLastThreeNodes();
 
     //TestGraph("../Res/graph.txt");
 
