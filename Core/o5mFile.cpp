@@ -4,25 +4,33 @@ namespace Core
 {
     void o5mFile::DisplayNode(const Node_t& node)
     {
-        if(node.stringTableIndex == 0)
-        {
-            printf("id: %11lu | lat: %2.7f | lon: %2.7f | Node %8lu \n",
-                   node.id, node.lat,
-                   node.lon, node.nodeCount);
-        }
-        else
-        {
-            printf("id: %11lu | lat: %2.7f | lon: %2.7f | Node %8lu \n",
-                   node.id, node.lat,
-                   node.lon, node.nodeCount);
+        printf("id: %11lu | lat: %2.7f | lon: %2.7f | Node: %8lu \n", node.id, node.lat, node.lon, node.nodeCount);
 
-            std::cout << "\t\t\t k=\"" << _stringPairTable.at(node.stringTableIndex).first
-                      << "\", v=\""    << _stringPairTable.at(node.stringTableIndex).second << "\"\n";
+        if(node.stringTableIndex != 0)
+        {
+            printf("\t\t\t k=\"%s\", v=\"%s\"\n",
+                   _stringPairTable.at(node.stringTableIndex).first.c_str(),
+                   _stringPairTable.at(node.stringTableIndex).second.c_str());
         }
+    }
+
+    void o5mFile::ProgressThread()
+    {
+        while(_runThread)
+        {
+            usleep(100000);
+            Utility::Display_ProgressBar(_fileProgress);
+        }
+
+        std::cout << "\n";
+        fflush(stdout);
     }
 
     o5mFile::o5mFile()
     {
+        //Reserve space for 20M nodes
+        _nodeVector.reserve(20000000);
+
         //Init string pair table
         for(uint32_t i = 0; i < STRING_TABLE_SIZE; i++)
         {
@@ -50,6 +58,14 @@ namespace Core
             //Temporary storage
             uint8_t currentByte[1] = {0};
 
+            //States
+            bool processWays = false;
+
+            //Start second thread to display progress
+            LOG(INFO) << "Start processing!";
+            _runThread = true;
+            std::thread t1(ProgressThread);
+
             //Read data byte by byte
             for(uint64_t fileIndex = 0; fileIndex < fileSize; fileIndex++)
             {
@@ -63,49 +79,55 @@ namespace Core
                 }
 
                 //Process node
-                else if(currentByte[0] == 0x10 && fileIndex <= 161095162) //Funktioniert nur bis ≤ 161095162
+                else if(currentByte[0] == 0x10 && !processWays)
                 {
                     //Read next byte (should be the length of the payload)
                     file.read((char*)&currentByte[0], sizeof(uint8_t));
                     fileIndex++;
                     uint8_t lengthOfData = currentByte[0];
 
-                    //For every byte of node data
-                    for(uint32_t j = 0; j < lengthOfData; j++)
+                    if(lengthOfData > 0)
                     {
-                        //Read next byte
-                        file.read((char*)&currentByte[0], sizeof(uint8_t));
-                        fileIndex++;
+                        //For every byte of node data
+                        for(uint32_t j = 0; j < lengthOfData; j++)
+                        {
+                            //Read next byte, increment index and save it in a vector
+                            file.read((char*)&currentByte[0], sizeof(uint8_t));
+                            fileIndex++;
+                            rawNodes.push_back(currentByte[0]);
+                        }
 
-                        rawNodes.push_back(currentByte[0]);
-                    }
-
-                    //Create and push_back node
-                    _nodeVector.push_back
-                    (
-                        Utility::ProcessNode
+                        //Create and push back the created node
+                        _nodeVector.push_back
                         (
-                            _nodeVector.size(),
-                            rawNodes,
-                            lengthOfData,
-                            &_stringPairTable,
-                            &_currentTableIndex
-                        )
-                    );
+                            Utility::ProcessNode
+                            (
+                                _nodeVector.size(),
+                                rawNodes,
+                                lengthOfData,
+                                &_stringPairTable,
+                                &_currentTableIndex
+                            )
+                        );
 
-                    rawNodes.clear();
+                        rawNodes.clear();
+                    }
                 }
 
                 //Process way
                 else if(currentByte[0] == 0x11)
                 {
                     _wayCount++;
+                    processWays = true;
                 }
 
-                //Bloß nicht benutzen... ist scheiße langsam
-                //Utility::PrintProgressBar((double)i/(double)fileSize);
-                //TODO: File-Parsing & Displaying multithreaden
+                //Update file progress
+                _fileProgress = (double)fileIndex/(double)fileSize;
             }
+
+            //Join thread
+            _runThread = false;
+            t1.join();
 
             LOG(INFO) << "File has been read in!";
         }
@@ -117,42 +139,42 @@ namespace Core
 
     void o5mFile::DisplayStatistics()
     {
-        LOG(INFO) << "########### DisplayStatistics() #######";
+        LOG(INFO) << "#############\t DisplayStatistics() \t\t#############";
 
         uint8_t headerData0[7] = {0xff, 0xe0, 0x04, 0x6f, 0x35, 0x6d, 0x32};
         uint8_t headerData1[7] = {0xff, 0xe0, 0x04, 0x6f, 0x35, 0x63, 0x32};
 
         if(Utility::ArrayCompareContent(&_header[0], &headerData0[0], sizeof(headerData0)))
         {
-            LOG(INFO) << "Type: 'o5m2'";
+            std::cout << "Type:\t\t o5m2\n";
         }
         else if(Utility::ArrayCompareContent(&_header[0], &headerData0[1], sizeof(headerData1)))
         {
-            LOG(INFO) << "Type: 'o5c2'";
+            std::cout << "Type:\t\t o5c2\n";
         }
         else
         {
-            LOG(ERROR) << "Type: INVALID";
+            std::cout << "Type:\t\t INVALID\n";
         }
 
-        LOG(INFO) << "NodeCount: " << _nodeVector.size();
-        LOG(INFO) << "StringPairCount: " << _currentTableIndex - 1;
-        LOG(INFO) << "WayCount: " << _wayCount;
+        std::cout << "NodeCount:\t " << _nodeVector.size() << "\n";
+        std::cout << "StringCount: " << _currentTableIndex - 1 << "\n";
+        std::cout << "WayCount:\t "  << _wayCount << "\n";
     }
 
     void o5mFile::DisplayAllNodes()
     {
-        LOG(INFO) << "########### DisplayAllNodes() ############";
+        LOG(INFO) << "#############\t DisplayAllNodes() \t#############";
 
-        for(uint64_t i = 0; i < _nodeVector.size(); i++)
+        for(const Node_t node : _nodeVector)
         {
-            DisplayNode(_nodeVector.at(i));
+            DisplayNode(node);
         }
     }
 
     void o5mFile::DisplayFirstThreeNodes()
     {
-        LOG(INFO) << "########### DisplayFirstThreeNodes() ############";
+        LOG(INFO) << "#############\t DisplayFirstThreeNodes() \t#############";
 
         for(uint8_t i = 0; i < 3; i++)
         {
@@ -162,7 +184,7 @@ namespace Core
 
     void o5mFile::DisplayLastThreeNodes()
     {
-        LOG(INFO) << "########### DisplayLastThreeNodes() ############";
+        LOG(INFO) << "#############\t DisplayLastThreeNodes() \t#############";
 
         for(uint64_t i = _nodeVector.size() - 3; i < _nodeVector.size(); i++)
         {

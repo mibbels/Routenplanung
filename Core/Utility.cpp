@@ -149,9 +149,9 @@ namespace Core
 
     void Utility::Display_ProgressBar(double percentage)
     {
-        int32_t val  = (int) (percentage * 100);
-        int32_t lpad = (int) (percentage * PBWIDTH);
-        int32_t rpad = PBWIDTH - lpad;
+        auto val  = (int32_t)(percentage * 100);
+        auto lpad = (int32_t)(percentage * PBWIDTH);
+        auto rpad = PBWIDTH - lpad;
         printf("\r%3d%%  [ %.*s%*s]", val, lpad, PBSTR, rpad, "");
         fflush(stdout);
     }
@@ -184,7 +184,7 @@ namespace Core
         for(uint8_t i = 0; i < 4; i++)
         {
             //Check if there is a following byte which is not zero
-            if(ArrayGotValue(byteArray, 4, i+1))
+            if(ArrayGotValue(byteArray, 4, i + 1))
             {
                 //Set indicator bit (next byte belongs to the same number)
                 byteArray[i] |= 0x80;
@@ -287,7 +287,7 @@ namespace Core
         }
 
         //Decode value
-        int32_t value = (int32_t)DeltaDecode_uInt32(rawData, dataLength);
+        auto value = (int32_t)DeltaDecode_uInt32(rawData, dataLength);
 
         //Bit shift one to the right
         value >>= 1;

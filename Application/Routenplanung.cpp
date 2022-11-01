@@ -62,7 +62,7 @@ int32_t TestGraph(const std::string& a_strInfile)
 int32_t main()
 {
     Core::Logger::Init();
-    LOG(INFO) << "########### Routenplanung #############";
+    LOG(INFO) << "#############\t Routenplanungstool \t\t#############";
 
     Core::o5mFile duesseldorfStreets;
     duesseldorfStreets.ReadIn("../Res/regbez-duesseldorf-streets-clean0.o5m");
