@@ -2,6 +2,15 @@
 
 namespace Core
 {
+    void _usleep(unsigned long _duration)
+    {
+    #ifdef __linux__
+        usleep(_duration);
+    #elif _WIN32
+        std::this_thread::sleep_for(std::chrono::milliseconds(_duration));
+    #endif
+    }
+
     void o5mFile::DisplayNode(const Node_t& node)
     {
         printf("id: %11lu | lat: %2.7f | lon: %2.7f | Node: %8lu \n", node.id, node.lat, node.lon, node.nodeCount);
@@ -18,7 +27,7 @@ namespace Core
     {
         while(_runThread)
         {
-            usleep(100000);
+            _usleep(750); //100000 too high?
             Utility::Display_ProgressBar(_fileProgress);
         }
 
