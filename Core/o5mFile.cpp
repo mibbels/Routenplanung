@@ -2,15 +2,6 @@
 
 namespace Core
 {
-    void _usleep(unsigned long _duration)
-    {
-    #ifdef __linux__
-        usleep(_duration);
-    #elif _WIN32
-        std::this_thread::sleep_for(std::chrono::milliseconds(_duration));
-    #endif
-    }
-
     void o5mFile::DisplayNode(const Node_t& node)
     {
         printf("id: %11lu | lat: %2.7f | lon: %2.7f | Node: %8lu \n", node.id, node.lat, node.lon, node.nodeCount);
@@ -23,11 +14,21 @@ namespace Core
         }
     }
 
+    void o5mFile::DisplayWay(const Way_t& way)
+    {
+        printf("id: %11lu | Way: %8lu \n", way.id, way.wayCount);
+
+        for(auto refs : way.nodeRefs)
+        {
+            printf("\t\t\t ref=\"%11lu\"\n", refs);
+        }
+    }
+
     void o5mFile::ProgressThread()
     {
         while(_runThread)
         {
-            _usleep(750); //100000 too high?
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
             Utility::Display_ProgressBar(_fileProgress);
         }
 
@@ -55,6 +56,7 @@ namespace Core
 
         //Temporary storage
         std::vector<uint8_t> rawNodes;
+        std::vector<uint8_t> rawWays;
 
         if(file)
         {
@@ -124,10 +126,57 @@ namespace Core
                 }
 
                 //Process way
-                else if(currentByte[0] == 0x11)
+                else if(currentByte[0] == 17 && !processWays) //To only process one way for now
                 {
-                    _wayCount++;
                     processWays = true;
+
+                    //Read next byte (should be the length of the payload)
+                    file.read((char*)&currentByte[0], sizeof(uint8_t));
+                    fileIndex++;
+                    uint8_t lengthOfData = currentByte[0];
+
+                    //If the payload length is longer than 1 byte
+                    if(Utility::BitIsSet(lengthOfData, 7))
+                    {
+                        std::vector<uint8_t> payloadLengthData = {currentByte[0]};
+
+                        while(Utility::BitIsSet(currentByte[0], 7))
+                        {
+                            file.read((char*)&currentByte[0], sizeof(uint8_t));
+                            payloadLengthData.push_back(currentByte[0]);
+                            fileIndex++;
+                        }
+
+                        lengthOfData = Utility::DeltaDecode_uInt32(&payloadLengthData.at(0), payloadLengthData.size());
+                    }
+
+                    if(lengthOfData > 0)
+                    {
+                        //For every byte of way data
+                        for(uint32_t j = 0; j < lengthOfData; j++)
+                        {
+                            //Read next byte, increment index and save it in a vector
+                            file.read((char*)&currentByte[0], sizeof(uint8_t));
+                            fileIndex++;
+                            rawWays.push_back(currentByte[0]);
+                        }
+
+                        //std::cout << "\n\n";
+                        //Utility::Display_ui8Vec(rawWays, rawWays.size());
+
+                        //Create and push back the created node
+                        _wayVector.push_back
+                        (
+                            Utility::ProcessWay
+                            (
+                                _wayVector.size(),
+                                rawWays,
+                                lengthOfData
+                            )
+                        );
+
+                        rawNodes.clear();
+                    }
                 }
 
                 //Update file progress
@@ -168,14 +217,14 @@ namespace Core
 
         std::cout << "NodeCount:\t " << _nodeVector.size() << "\n";
         std::cout << "StringCount: " << _currentTableIndex - 1 << "\n";
-        std::cout << "WayCount:\t "  << _wayCount << "\n";
+        std::cout << "WayCount:\t "  << _wayVector.size() << "\n";
     }
 
     void o5mFile::DisplayAllNodes()
     {
         LOG(INFO) << "#############\t DisplayAllNodes() \t#############";
 
-        for(const Node_t node : _nodeVector)
+        for(const Node_t& node : _nodeVector)
         {
             DisplayNode(node);
         }
@@ -198,6 +247,36 @@ namespace Core
         for(uint64_t i = _nodeVector.size() - 3; i < _nodeVector.size(); i++)
         {
             DisplayNode(_nodeVector.at(i));
+        }
+    }
+
+    void o5mFile::DisplayAllWays()
+    {
+        LOG(INFO) << "#############\t DisplayAllWays() \t#############";
+
+        for(const Way_t& way : _wayVector)
+        {
+            DisplayWay(way);
+        }
+    }
+
+    void o5mFile::DisplayFirstThreeWays()
+    {
+        LOG(INFO) << "#############\t DisplayFirstThreeWays() \t#############";
+
+        for(uint8_t i = 0; i < 3; i++)
+        {
+            DisplayWay(_wayVector.at(i));
+        }
+    }
+
+    void o5mFile::DisplayLastThreeWays()
+    {
+        LOG(INFO) << "#############\t DisplayLastThreeWays() \t#############";
+
+        for(uint64_t i = _wayVector.size() - 3; i < _wayVector.size(); i++)
+        {
+            DisplayWay(_wayVector.at(i));
         }
     }
 }

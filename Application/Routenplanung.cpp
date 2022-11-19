@@ -2,6 +2,7 @@
 #include "Datatypes.hpp"
 #include "o5mFile.hpp"
 #include "Graph.h"
+#include "Utility.hpp"
 
 int32_t TestGraph(const std::string& a_strInfile)
 {
@@ -68,8 +69,22 @@ int32_t main()
     duesseldorfStreets.ReadIn("../Res/regbez-duesseldorf-streets-clean0.o5m");
     duesseldorfStreets.DisplayStatistics();
     //duesseldorfStreets.DisplayAllNodes();
-    duesseldorfStreets.DisplayFirstThreeNodes();
-    duesseldorfStreets.DisplayLastThreeNodes();
+    //duesseldorfStreets.DisplayFirstThreeNodes();
+    //duesseldorfStreets.DisplayLastThreeNodes();
+    duesseldorfStreets.DisplayAllWays();
+    //duesseldorfStreets.DisplayFirstThreeNodes();
+    //duesseldorfStreets.DisplayLastThreeNodes();
+
+    //0x01 0x80 0xa5 0xc7 0x03 0x22 0x00 0x7e 0xda 0x8c 0x9f 0xf8 0x20 0xff 0xaf 0xb9 0xb5 0x1d 0xca 0xa6 0x91 0xb5 0x1d 0xf9 0x80 0xfe
+
+    //0xda 0x8c 0x9f 0xf8 0x20
+    //std::vector<uint8_t> values = {0xda, 0x8c, 0x9f, 0xf8, 0x20};
+    //std::vector<uint8_t> values2 = {0x80, 0xa5, 0xc7, 0x03};
+    //std::vector<uint8_t> values3 = {0x22};
+    //auto val = Core::Utility::DeltaDecode_Int32(&values3[0], values3.size());
+
+    //std::vector<uint8_t> way = {0x00, 0xec, 0x9b, 0xe8, 0x03, 0x00, 0x07, 0xce, 0xb9, 0xfe, 0x13, 0xce, 0xeb, 0x01};
+    //Core::Utility::ProcessWay(0, way, way.size());
 
     //TestGraph("../Res/graph.txt");
 

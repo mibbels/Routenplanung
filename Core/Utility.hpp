@@ -7,20 +7,24 @@ namespace Core
 {
     class Utility
     {
-        private:
-            static uint8_t GetLengthOfValue(const std::vector<uint8_t>& nodeData, uint8_t currentIndex);
-
         public:
+            static uint8_t GetLengthOfValue(const std::vector<uint8_t>& nodeData, uint8_t currentIndex);
             static bool    BitIsSet(uint32_t value, uint32_t index);
             static bool    ArrayGotValue(const uint8_t* arr, uint8_t length, uint8_t index);
             static bool    ArrayCompareContent(const uint8_t* fileData, const uint8_t* compareData, uint8_t dataSize);
             static Node_t  ProcessNode
                            (
-                                uint32_t                    nodeCount,
+                                uint64_t                    nodeCount,
                                 const std::vector<uint8_t>& nodeData,
                                 uint8_t                     dataLength,
                                 stringPairTable_t*          strPairTable,
                                 uint32_t*                   currTableIndex
+                           );
+            static Way_t   ProcessWay
+                           (
+                                uint64_t                    wayCount,
+                                const std::vector<uint8_t>& wayData,
+                                uint8_t                     dataLength
                            );
 
             static void    Display_ui8Vec(const std::vector<uint8_t>& vector, uint8_t numberOfBytes);

@@ -51,7 +51,7 @@ namespace Core
 
     Node_t Utility::ProcessNode
     (
-        uint32_t                    nodeCount,
+        uint64_t                    nodeCount,
         const std::vector<uint8_t>& nodeData,
         uint8_t                     dataLength,
         stringPairTable_t*          strPairTable,
@@ -65,8 +65,8 @@ namespace Core
         uint8_t index = 0;
 
         //Get length of id and add delta to ongoing id value
-        uint64_t idLength = Utility::GetLengthOfValue(nodeData, index);
-        currentID        += Utility::DeltaDecode_Int32(&nodeData.at(index), idLength);
+        uint8_t idLength = Utility::GetLengthOfValue(nodeData, index);
+        currentID       += Utility::DeltaDecode_Int32(&nodeData.at(index), idLength);
 
         //Increment index while it's not a zero to skip all version bytes
         while(nodeData.at(index) != 0x00)
@@ -131,6 +131,68 @@ namespace Core
             currentLat,
             currentLon,
             oldIndex
+        };
+    }
+
+    Way_t Utility::ProcessWay
+    (
+        uint64_t                    wayCount,
+        const std::vector<uint8_t>& wayData,
+        uint8_t                     dataLength
+    )
+    {
+        static uint64_t currentID  = 0;
+
+        //Storage
+        uint8_t index = 0;
+        std::vector<uint64_t> nodeRefs;
+
+        //Get length of id and add delta to ongoing id value
+        uint8_t idLength = Utility::GetLengthOfValue(wayData, index);
+        currentID       += Utility::DeltaDecode_Int32(&wayData.at(index), idLength);
+
+        //Increment index while it's not a zero to skip all version bytes
+        while(wayData.at(index) != 0x00)
+        {
+            index++;
+        }
+
+        //Increment index (next byte is the beginning of the length of the reference section)
+        index++;
+
+        //Get length of this variable and save it
+        uint8_t lengthOfRefCount = Utility::GetLengthOfValue(wayData, index);
+        uint8_t refCount         = Utility::DeltaDecode_uInt32(&wayData.at(index), lengthOfRefCount);
+
+        //Sanity check
+        if(index + refCount < dataLength)
+        {
+            //Increment index accordingly
+            index += lengthOfRefCount;
+
+            uint64_t lastID = 0;
+
+            //Decode and save the id of every referenced node
+            while(index < dataLength)
+            {
+                //Decode and save the id of every referenced node
+                uint8_t  lengthOfID   = Utility::GetLengthOfValue(wayData, index);
+                lastID               += Utility::DeltaDecode_Int32(&wayData.at(index), lengthOfID);
+
+                nodeRefs.push_back(lastID);
+
+                //Increment the amount of bytes which already got processed
+                index += lengthOfID;
+            }
+        }
+
+        //Additional <tags> will be discarded for now
+
+        return
+        {
+            wayCount,
+            currentID,
+            nodeRefs
         };
     }
 
