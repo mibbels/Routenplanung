@@ -58,6 +58,9 @@ namespace Core
         std::vector<uint8_t> rawNodes;
         std::vector<uint8_t> rawWays;
 
+        //Init
+        Utility::ResetDeltaCounters();
+
         if(file)
         {
             //Get file size
@@ -90,7 +93,7 @@ namespace Core
                 }
 
                 //Process node
-                else if(currentByte[0] == 0x10 && !processWays)
+                else if(currentByte[0] == 16 && !processWays)
                 {
                     //Read next byte (should be the length of the payload)
                     file.read((char*)&currentByte[0], sizeof(uint8_t));
@@ -126,10 +129,8 @@ namespace Core
                 }
 
                 //Process way
-                else if(currentByte[0] == 17 && !processWays) //To only process one way for now
+                else if(currentByte[0] == 17 && _wayVector.size() < 3) //To only process the first three ways for now
                 {
-                    processWays = true;
-
                     //Read next byte (should be the length of the payload)
                     file.read((char*)&currentByte[0], sizeof(uint8_t));
                     fileIndex++;
@@ -164,19 +165,31 @@ namespace Core
                         //std::cout << "\n\n";
                         //Utility::Display_ui8Vec(rawWays, rawWays.size());
 
-                        //Create and push back the created node
-                        _wayVector.push_back
-                        (
-                            Utility::ProcessWay
+                        //To skip the first way
+                        if(processWays)
+                        {
+                            //Create and push back the created node
+                            _wayVector.push_back
                             (
-                                _wayVector.size(),
-                                rawWays,
-                                lengthOfData
-                            )
-                        );
-
-                        rawNodes.clear();
+                                Utility::ProcessWay
+                                (
+                                    _wayVector.size(),
+                                    rawWays,
+                                    lengthOfData
+                                )
+                            );
+                        }
                     }
+
+                    rawWays.clear();
+
+                    processWays = true;
+                }
+
+                //Reset byte
+                else if(currentByte[0] == 255)
+                {
+                    Utility::ResetDeltaCounters();
                 }
 
                 //Update file progress

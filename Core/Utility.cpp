@@ -49,6 +49,13 @@ namespace Core
         return true;
     }
 
+    void Utility::ResetDeltaCounters()
+    {
+        _nodeDeltaCounter = 0;
+        _wayDeltaCounter = 0;
+        _refNodeDeltaCounter = 0;
+    }
+
     Node_t Utility::ProcessNode
     (
         uint64_t                    nodeCount,
@@ -58,15 +65,14 @@ namespace Core
         uint32_t*                   currTableIndex
     )
     {
-        static uint64_t currentID  = 0;
         static double   currentLat = 0.0;
         static double   currentLon = 0.0;
 
         uint8_t index = 0;
 
         //Get length of id and add delta to ongoing id value
-        uint8_t idLength = Utility::GetLengthOfValue(nodeData, index);
-        currentID       += Utility::DeltaDecode_Int32(&nodeData.at(index), idLength);
+        uint8_t idLength   = Utility::GetLengthOfValue(nodeData, index);
+        AddDeltaValue(&_nodeDeltaCounter, &nodeData.at(index), idLength);
 
         //Increment index while it's not a zero to skip all version bytes
         while(nodeData.at(index) != 0x00)
@@ -127,7 +133,7 @@ namespace Core
         return
         {
             nodeCount,
-            currentID,
+            _nodeDeltaCounter,
             currentLat,
             currentLon,
             oldIndex
@@ -141,15 +147,18 @@ namespace Core
         uint8_t                     dataLength
     )
     {
-        static uint64_t currentID  = 0;
+        if(wayCount == 0)
+        {
+            _wayDeltaCounter = 3729728;
+        }
 
         //Storage
         uint8_t index = 0;
         std::vector<uint64_t> nodeRefs;
 
         //Get length of id and add delta to ongoing id value
-        uint8_t idLength = Utility::GetLengthOfValue(wayData, index);
-        currentID       += Utility::DeltaDecode_Int32(&wayData.at(index), idLength);
+        uint8_t idLength  = Utility::GetLengthOfValue(wayData, index);
+        AddDeltaValue(&_wayDeltaCounter, &wayData.at(index), idLength);
 
         //Increment index while it's not a zero to skip all version bytes
         while(wayData.at(index) != 0x00)
@@ -164,25 +173,51 @@ namespace Core
         uint8_t lengthOfRefCount = Utility::GetLengthOfValue(wayData, index);
         uint8_t refCount         = Utility::DeltaDecode_uInt32(&wayData.at(index), lengthOfRefCount);
 
+        uint8_t localRefCounter = 0;
+        uint8_t refNodeIDLength = 0;
+
         //Sanity check
         if(index + refCount < dataLength)
         {
             //Increment index accordingly
             index += lengthOfRefCount;
 
-            uint64_t lastID = 0;
-
             //Decode and save the id of every referenced node
             while(index < dataLength)
             {
-                //Decode and save the id of every referenced node
-                uint8_t  lengthOfID   = Utility::GetLengthOfValue(wayData, index);
-                lastID               += Utility::DeltaDecode_Int32(&wayData.at(index), lengthOfID);
+                refNodeIDLength = Utility::GetLengthOfValue(wayData, index);
 
-                nodeRefs.push_back(lastID);
+                /*if(wayCount == 0 && localRefCounter == 0)
+                {
+                    _refNodeDeltaCounter = 4421051181;
+                }
+                else if(wayCount == 0 && localRefCounter == 1)
+                {
+                    _refNodeDeltaCounter = 472692525;
+                }
+                else if(wayCount == 0 && localRefCounter == 2)
+                {
+                    _refNodeDeltaCounter = 4420722898;
+                }*/
+                if(wayCount == 0 && localRefCounter == 0)
+                {
+                    _refNodeDeltaCounter = 18480048;
+                }
+                else
+                {
+                    //Decode and save the id of every referenced node
+                    //refNodeIDLength       = Utility::GetLengthOfValue(wayData, index);
+                    //_refNodeDeltaCounter += Utility::DeltaDecode_Int32(&wayData.at(index), refNodeIDLength);
+
+                    AddDeltaValue(&_refNodeDeltaCounter, &wayData.at(index), refNodeIDLength);
+                }
+
+                nodeRefs.push_back(_refNodeDeltaCounter);
 
                 //Increment the amount of bytes which already got processed
-                index += lengthOfID;
+                index += refNodeIDLength;
+
+                localRefCounter++;
             }
         }
 
@@ -191,7 +226,7 @@ namespace Core
         return
         {
             wayCount,
-            currentID,
+            _wayDeltaCounter,
             nodeRefs
         };
     }
@@ -338,6 +373,29 @@ namespace Core
         return value;
     }
 
+    uint64_t Utility::DeltaDecode_uInt64(const uint8_t* rawData, uint8_t dataLength)
+    {
+        uint64_t value = 0;
+
+        //Iterate over all bytes
+        for(uint8_t i = 0; i < dataLength; i++)
+        {
+            uint8_t currentByte = rawData[i];
+
+            //Check if msb is set
+            if(BitIsSet(rawData[i], 7))
+            {
+                //Negate first bit
+                currentByte &= 0x7f;
+            }
+
+            //Write byte to corresponding position
+            value |= currentByte << (7 * i);
+        }
+
+        return value;
+    }
+
     int32_t Utility::DeltaDecode_Int32(const uint8_t* rawData, uint8_t dataLength)
     {
         bool negativeValue = false;
@@ -361,6 +419,58 @@ namespace Core
         }
 
         return value;
+    }
+
+    void Utility::AddDeltaValue(uint64_t* currentValue, const uint8_t* rawData, uint8_t dataLength)
+    {
+        bool negativeValue = false;
+
+        //Check if lsb is set
+        if(BitIsSet(rawData[0], 0))
+        {
+            negativeValue = true;
+        }
+
+        //Some tests
+        int32_t   i32value = DeltaDecode_uInt32(rawData, dataLength);
+        int64_t   i64value = DeltaDecode_uInt32(rawData, dataLength);
+        uint32_t ui32value = DeltaDecode_uInt32(rawData, dataLength);
+        uint64_t ui64value = DeltaDecode_uInt64(rawData, dataLength);
+
+        int32_t i32value_s = i32value >> 1;
+        int64_t i64value_s = i64value >> 1;
+        uint32_t ui32value_s = ui32value >> 1;
+        uint64_t ui64value_s = ui64value >> 1;
+
+        i32value_s++;
+        i64value_s++;
+        ui32value_s++;
+        ui64value_s++;
+
+        if(i64value < 0)
+        {
+            //Bit shift one to the right
+            ui32value >>= 1;
+
+            *currentValue += ui32value;
+        }
+        else if(negativeValue)
+        {
+            //Bit shift one to the right
+            i64value >>= 1;
+
+            i64value++;
+            //i64value *= -1;
+
+            *currentValue -= i64value;
+        }
+        else
+        {
+            //Bit shift one to the right
+            i64value >>= 1;
+
+            *currentValue += i64value;
+        }
     }
 
     double Utility::DeltaDecode_Float(const uint8_t* rawData, uint8_t dataLength)
