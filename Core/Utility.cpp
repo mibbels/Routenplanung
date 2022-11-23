@@ -5,11 +5,11 @@ namespace Core
     #define PBSTR   "############################################################"
     #define PBWIDTH 60
 
-    uint8_t Utility::GetLengthOfValue(const std::vector<uint8_t>& nodeData, uint8_t currentIndex)
+    uint64_t Utility::GetLengthOfValue(const std::vector<uint8_t>& data, uint64_t currentIndex)
     {
-        uint8_t startIndex = currentIndex;
+        uint64_t startIndex = currentIndex;
 
-        while(Utility::BitIsSet(nodeData.at(currentIndex), 7))
+        while(Utility::BitIsSet(data.at(currentIndex), 7))
         {
             currentIndex++;
         }
@@ -65,14 +65,13 @@ namespace Core
         uint32_t*                   currTableIndex
     )
     {
-        static double   currentLat = 0.0;
-        static double   currentLon = 0.0;
+        static double currentLat = 0.0;
+        static double currentLon = 0.0;
 
-        uint8_t index = 0;
+        uint8_t index = 0; //Index to move through the byte stream
 
-        //Get length of id and add delta to ongoing id value
-        uint8_t idLength   = Utility::GetLengthOfValue(nodeData, index);
-        AddDeltaValue(&_nodeDeltaCounter, &nodeData.at(index), idLength);
+        //Add id delta to ongoing id value
+        _nodeDeltaCounter += Utility::DeltaDecode_Int64(&nodeData.at(index));
 
         //Increment index while it's not a zero to skip all version bytes
         while(nodeData.at(index) != 0x00)
@@ -94,8 +93,8 @@ namespace Core
         index += secondFloatLength;
 
         //Get latitude and longitude delta
-        currentLon += Utility::DeltaDecode_Float(&nodeData.at(firstFloatIndex), firstFloatLength);
-        currentLat += Utility::DeltaDecode_Float(&nodeData.at(secondFloatIndex), secondFloatLength);
+        currentLon += Utility::DeltaDecode_Float(&nodeData.at(firstFloatIndex));
+        currentLat += Utility::DeltaDecode_Float(&nodeData.at(secondFloatIndex));
 
         //Set index reference to 0 (placeholder string)
         uint32_t oldIndex = 0;
@@ -144,21 +143,17 @@ namespace Core
     (
         uint64_t                    wayCount,
         const std::vector<uint8_t>& wayData,
-        uint8_t                     dataLength
+        uint64_t                    dataLength
     )
     {
-        if(wayCount == 0)
-        {
-            _wayDeltaCounter = 3729728;
-        }
-
         //Storage
-        uint8_t index = 0;
         std::vector<uint64_t> nodeRefs;
 
-        //Get length of id and add delta to ongoing id value
-        uint8_t idLength  = Utility::GetLengthOfValue(wayData, index);
-        AddDeltaValue(&_wayDeltaCounter, &wayData.at(index), idLength);
+        uint64_t index           = 0; //Index to move through the byte stream
+        uint64_t refNodeIDLength = 0; //Length of every referenced node id
+
+        //Add id delta to ongoing id value
+        _wayDeltaCounter += Utility::DeltaDecode_Int64(&wayData.at(index));
 
         //Increment index while it's not a zero to skip all version bytes
         while(wayData.at(index) != 0x00)
@@ -169,55 +164,33 @@ namespace Core
         //Increment index (next byte is the beginning of the length of the reference section)
         index++;
 
-        //Get length of this variable and save it
-        uint8_t lengthOfRefCount = Utility::GetLengthOfValue(wayData, index);
-        uint8_t refCount         = Utility::DeltaDecode_uInt32(&wayData.at(index), lengthOfRefCount);
+        //Get length of the reference section variable (to know how much to move the index)
+        uint64_t lengthOfRefSectionVariable = Utility::GetLengthOfValue(wayData, index);
 
-        uint8_t localRefCounter = 0;
-        uint8_t refNodeIDLength = 0;
+        //Get length of the "real" reference section (all the data in it)
+        uint64_t lengthOfRefSection         = Utility::DeltaDecode_uInt64(&wayData.at(index));
 
         //Sanity check
-        if(index + refCount < dataLength)
+        if(index + lengthOfRefSection < dataLength)
         {
             //Increment index accordingly
-            index += lengthOfRefCount;
+            index += lengthOfRefSectionVariable;
 
             //Decode and save the id of every referenced node
-            while(index < dataLength)
+            while(lengthOfRefSection > 0)
             {
                 refNodeIDLength = Utility::GetLengthOfValue(wayData, index);
 
-                /*if(wayCount == 0 && localRefCounter == 0)
-                {
-                    _refNodeDeltaCounter = 4421051181;
-                }
-                else if(wayCount == 0 && localRefCounter == 1)
-                {
-                    _refNodeDeltaCounter = 472692525;
-                }
-                else if(wayCount == 0 && localRefCounter == 2)
-                {
-                    _refNodeDeltaCounter = 4420722898;
-                }*/
-                if(wayCount == 0 && localRefCounter == 0)
-                {
-                    _refNodeDeltaCounter = 18480048;
-                }
-                else
-                {
-                    //Decode and save the id of every referenced node
-                    //refNodeIDLength       = Utility::GetLengthOfValue(wayData, index);
-                    //_refNodeDeltaCounter += Utility::DeltaDecode_Int32(&wayData.at(index), refNodeIDLength);
-
-                    AddDeltaValue(&_refNodeDeltaCounter, &wayData.at(index), refNodeIDLength);
-                }
+                //Decode and save the id of every referenced node
+                _refNodeDeltaCounter += DeltaDecode_Int64(&wayData.at(index));
 
                 nodeRefs.push_back(_refNodeDeltaCounter);
 
                 //Increment the amount of bytes which already got processed
                 index += refNodeIDLength;
 
-                localRefCounter++;
+                //Decrease the amount of reference section that is left to be processed
+                lengthOfRefSection -= refNodeIDLength;
             }
         }
 
@@ -350,132 +323,79 @@ namespace Core
         return result;
     }
 
-    uint32_t Utility::DeltaDecode_uInt32(const uint8_t* rawData, uint8_t dataLength)
+    uint32_t Utility::DeltaDecode_uInt32(const uint8_t* rawData)
     {
-        uint32_t value = 0;
+        uint8_t  currentByte;
+        uint8_t  count  = 0;
+        uint32_t value  = 0;
 
-        //Iterate over all bytes
-        for(uint8_t i = 0; i < dataLength; i++)
+        //Do while first bit is set (next byte belongs to the same number)
+        do
         {
-            uint8_t currentByte = rawData[i];
-
-            //Check if msb is set
-            if(BitIsSet(rawData[i], 7))
-            {
-                //Negate first bit
-                currentByte &= 0x7f;
-            }
-
-            //Write byte to corresponding position
-            value |= currentByte << (7 * i);
+            currentByte = rawData[count];
+            value |= (uint32_t)(currentByte & 0x7f) << (count * 7);
+            count++;
         }
+        while(currentByte & 0x80);
 
         return value;
     }
 
-    uint64_t Utility::DeltaDecode_uInt64(const uint8_t* rawData, uint8_t dataLength)
+    uint64_t Utility::DeltaDecode_uInt64(const uint8_t* rawData)
     {
-        uint64_t value = 0;
+        uint8_t  currentByte;
+        uint8_t  count = 0;
+        uint64_t value = 0LL;
 
-        //Iterate over all bytes
-        for(uint8_t i = 0; i < dataLength; i++)
+        //Do while first bit is set (next byte belongs to the same number)
+        do
         {
-            uint8_t currentByte = rawData[i];
-
-            //Check if msb is set
-            if(BitIsSet(rawData[i], 7))
-            {
-                //Negate first bit
-                currentByte &= 0x7f;
-            }
-
-            //Write byte to corresponding position
-            value |= currentByte << (7 * i);
+            currentByte = rawData[count];
+            value |= (long long)(currentByte & 0x7f) << (count * 7);
+            count++;
         }
+        while(currentByte & 0x80);
 
         return value;
     }
 
-    int32_t Utility::DeltaDecode_Int32(const uint8_t* rawData, uint8_t dataLength)
+    int32_t Utility::DeltaDecode_Int32(const uint8_t* rawData)
     {
-        bool negativeValue = false;
+        uint32_t value = DeltaDecode_uInt32(rawData);
 
-        //Check if lsb is set
-        if(BitIsSet(rawData[0], 0))
+        //Check if lsb is set (indicates negative value)
+        if(value & 0x01)
         {
-            negativeValue = true;
-        }
-
-        //Decode value
-        auto value = (int32_t)DeltaDecode_uInt32(rawData, dataLength);
-
-        //Bit shift one to the right
-        value >>= 1;
-
-        if(negativeValue)
-        {
-            value++;
-            value *= -1;
-        }
-
-        return value;
-    }
-
-    void Utility::AddDeltaValue(uint64_t* currentValue, const uint8_t* rawData, uint8_t dataLength)
-    {
-        bool negativeValue = false;
-
-        //Check if lsb is set
-        if(BitIsSet(rawData[0], 0))
-        {
-            negativeValue = true;
-        }
-
-        //Some tests
-        int32_t   i32value = DeltaDecode_uInt32(rawData, dataLength);
-        int64_t   i64value = DeltaDecode_uInt32(rawData, dataLength);
-        uint32_t ui32value = DeltaDecode_uInt32(rawData, dataLength);
-        uint64_t ui64value = DeltaDecode_uInt64(rawData, dataLength);
-
-        int32_t i32value_s = i32value >> 1;
-        int64_t i64value_s = i64value >> 1;
-        uint32_t ui32value_s = ui32value >> 1;
-        uint64_t ui64value_s = ui64value >> 1;
-
-        i32value_s++;
-        i64value_s++;
-        ui32value_s++;
-        ui64value_s++;
-
-        if(i64value < 0)
-        {
-            //Bit shift one to the right
-            ui32value >>= 1;
-
-            *currentValue += ui32value;
-        }
-        else if(negativeValue)
-        {
-            //Bit shift one to the right
-            i64value >>= 1;
-
-            i64value++;
-            //i64value *= -1;
-
-            *currentValue -= i64value;
+            return -(int32_t)(value >> 1) - 1;
         }
         else
         {
-            //Bit shift one to the right
-            i64value >>= 1;
-
-            *currentValue += i64value;
+            return (int32_t)(value >> 1);
         }
     }
 
-    double Utility::DeltaDecode_Float(const uint8_t* rawData, uint8_t dataLength)
+    int64_t Utility::DeltaDecode_Int64(const uint8_t* rawData)
     {
-        return (double)DeltaDecode_Int32(rawData, dataLength) / pow(10.0, 7.0);
+        uint64_t value = DeltaDecode_uInt64(rawData);
+
+        //Check if lsb is set (indicates negative value)
+        if(value & 0x01)
+        {
+            return -(int64_t)(value >> 1) - 1;
+        }
+        else
+        {
+            return (int64_t)(value >> 1);
+        }
+    }
+
+    double Utility::DeltaDecode_Float(const uint8_t* rawData)
+    {
+        /*uint32_t value;
+        DeltaDecode_Int32(rawData, &value);
+        value /=
+        return ((double)(value))/pow(10.0, 7.0);*/
+        return (double)DeltaDecode_Int32(rawData) / pow(10.0, 7.0);
     }
 
     //This function returns the first string pair (k, v) from a <tag>

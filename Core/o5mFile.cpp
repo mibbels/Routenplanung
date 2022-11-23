@@ -38,8 +38,9 @@ namespace Core
 
     o5mFile::o5mFile()
     {
-        //Reserve space for 20M nodes
+        //Reserve space for 20M nodes and 1M ways
         _nodeVector.reserve(20000000);
+        _wayVector.reserve(1000000);
 
         //Init string pair table
         for(uint32_t i = 0; i < STRING_TABLE_SIZE; i++)
@@ -74,6 +75,7 @@ namespace Core
 
             //States
             bool processWays = false;
+            bool processSomethingElse = false;
 
             //Start second thread to display progress
             LOG(INFO) << "Start processing!";
@@ -129,14 +131,16 @@ namespace Core
                 }
 
                 //Process way
-                else if(currentByte[0] == 17 && _wayVector.size() < 3) //To only process the first three ways for now
+                else if(currentByte[0] == 17 && _wayVector.size() < 1000000) //To read the first 1M ways
                 {
+                    processWays = true;
+
                     //Read next byte (should be the length of the payload)
                     file.read((char*)&currentByte[0], sizeof(uint8_t));
                     fileIndex++;
-                    uint8_t lengthOfData = currentByte[0];
+                    uint64_t lengthOfData = currentByte[0];
 
-                    //If the payload length is longer than 1 byte
+                    //If the payload length is longer than 1 byte, decode it
                     if(Utility::BitIsSet(lengthOfData, 7))
                     {
                         std::vector<uint8_t> payloadLengthData = {currentByte[0]};
@@ -148,7 +152,7 @@ namespace Core
                             fileIndex++;
                         }
 
-                        lengthOfData = Utility::DeltaDecode_uInt32(&payloadLengthData.at(0), payloadLengthData.size());
+                        lengthOfData = Utility::DeltaDecode_uInt64(&payloadLengthData.at(0));
                     }
 
                     if(lengthOfData > 0)
@@ -165,25 +169,19 @@ namespace Core
                         //std::cout << "\n\n";
                         //Utility::Display_ui8Vec(rawWays, rawWays.size());
 
-                        //To skip the first way
-                        if(processWays)
-                        {
-                            //Create and push back the created node
-                            _wayVector.push_back
+                        //Create and push back the created way
+                        _wayVector.push_back
+                        (
+                            Utility::ProcessWay
                             (
-                                Utility::ProcessWay
-                                (
-                                    _wayVector.size(),
-                                    rawWays,
-                                    lengthOfData
-                                )
-                            );
-                        }
+                                _wayVector.size(),
+                                rawWays,
+                                lengthOfData
+                            )
+                        );
+
+                        rawWays.clear();
                     }
-
-                    rawWays.clear();
-
-                    processWays = true;
                 }
 
                 //Reset byte

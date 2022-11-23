@@ -13,10 +13,14 @@ namespace Core
             inline static uint64_t _refNodeDeltaCounter = uint64_t();
 
         public:
-            static uint8_t GetLengthOfValue(const std::vector<uint8_t>& nodeData, uint8_t currentIndex);
-            static bool    BitIsSet(uint32_t value, uint32_t index);
-            static bool    ArrayGotValue(const uint8_t* arr, uint8_t length, uint8_t index);
-            static bool    ArrayCompareContent(const uint8_t* fileData, const uint8_t* compareData, uint8_t dataSize);
+
+            //--- General utility
+            static uint64_t GetLengthOfValue(const std::vector<uint8_t>& data, uint64_t currentIndex);
+            static bool     BitIsSet(uint32_t value, uint32_t index);
+            static bool     ArrayGotValue(const uint8_t* arr, uint8_t length, uint8_t index);
+            static bool     ArrayCompareContent(const uint8_t* fileData, const uint8_t* compareData, uint8_t dataSize);
+
+            //--- Data processing
             static void    ResetDeltaCounters();
             static Node_t  ProcessNode
                            (
@@ -30,19 +34,21 @@ namespace Core
                            (
                                 uint64_t                    wayCount,
                                 const std::vector<uint8_t>& wayData,
-                                uint8_t                     dataLength
+                                uint64_t                    dataLength
                            );
 
+            //--- Data visualization
             static void    Display_ui8Vec(const std::vector<uint8_t>& vector, uint8_t numberOfBytes);
             static void    Display_ProgressBar(double percentage);
 
+            //--- Data encoding and decoding
             static std::vector<uint8_t> DeltaEncode_uInt32(uint32_t value);
             static std::vector<uint8_t> DeltaEncode_Int32 (int32_t  value);
-            static uint32_t             DeltaDecode_uInt32(const uint8_t* rawData, uint8_t dataLength);
-            static uint64_t             DeltaDecode_uInt64(const uint8_t* rawData, uint8_t dataLength);
-            static int32_t              DeltaDecode_Int32 (const uint8_t* rawData, uint8_t dataLength);
-            static void                 AddDeltaValue(uint64_t* currentValue, const uint8_t* rawData, uint8_t dataLength);
-            static double               DeltaDecode_Float(const uint8_t* rawData, uint8_t dataLength);
-            static stringPair_t         Decode_StringPair(const uint8_t* rawData);
+            static uint32_t             DeltaDecode_uInt32(const uint8_t* rawData);
+            static uint64_t             DeltaDecode_uInt64(const uint8_t* rawData);
+            static int32_t              DeltaDecode_Int32 (const uint8_t* rawData);
+            static int64_t              DeltaDecode_Int64 (const uint8_t* rawData);
+            static double               DeltaDecode_Float (const uint8_t* rawData);
+            static stringPair_t         Decode_StringPair (const uint8_t* rawData);
     };
 }
