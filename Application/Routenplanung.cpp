@@ -68,7 +68,8 @@ int32_t main()
     // taken from: https://stxxl.org/tags/1.4.1/install_config.html
 
     stxxl::config * cfg = stxxl::config::get_instance();
-    stxxl::disk_config disk_win("C:\\Users\\maxib\\stxxl.tmp", 1 * 1024 * 1024 * 1024, "wincall delete");
+
+    stxxl::disk_config disk_win("disk=C:\\Users\\maxib\\stxxl.tmp, 10 GiB, wincall delete");
     /*  use size = 0 for "autogrow"
      */
 
@@ -96,8 +97,8 @@ int32_t main()
     //duesseldorfStreets.DisplayLastThreeWays();
 
     //TestGraph("../Res/graph.txt");
-    Core::graph* g = new Core::graph();
-    g->create(duesseldorfStreets);
+    //Core::graph* g = new Core::graph();
+    //g->create(duesseldorfStreets);
 
     return 0;
 }
