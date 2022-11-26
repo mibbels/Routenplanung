@@ -4,6 +4,7 @@
 #include "Graph.h"
 #include "Utility.hpp"
 
+/*
 int32_t TestGraph(const std::string& a_strInfile)
 {
     std::string strLine, strTok;
@@ -59,9 +60,23 @@ int32_t TestGraph(const std::string& a_strInfile)
 
     return 0;
 }
+*/
 
 int32_t main()
 {
+
+    // taken from: https://stxxl.org/tags/1.4.1/install_config.html
+
+    stxxl::config * cfg = stxxl::config::get_instance();
+    stxxl::disk_config disk_win("C:\\Users\\maxib\\stxxl.tmp", 1 * 1024 * 1024 * 1024, "wincall delete");
+    /*  use size = 0 for "autogrow"
+     */
+
+    //disk1.direct = stxxl::disk_config::DIRECT_ON; // force O_DIRECT
+
+    cfg->add_disk(disk_win);
+
+
     Core::Logger::Init();
     LOG(INFO) << "#############\t Routenplanungstool \t\t#############";
 
@@ -72,15 +87,17 @@ int32_t main()
 
     //--- Nodes
     //duesseldorfStreets.DisplayAllNodes();
-    duesseldorfStreets.DisplayFirstThreeNodes();
-    duesseldorfStreets.DisplayLastThreeNodes();
+    //duesseldorfStreets.DisplayFirstThreeNodes();
+    //duesseldorfStreets.DisplayLastThreeNodes();
 
     //--- Ways
     //duesseldorfStreets.DisplayAllWays();
-    duesseldorfStreets.DisplayFirstThreeWays();
-    duesseldorfStreets.DisplayLastThreeWays();
+    //duesseldorfStreets.DisplayFirstThreeWays();
+    //duesseldorfStreets.DisplayLastThreeWays();
 
     //TestGraph("../Res/graph.txt");
+    Core::graph* g = new Core::graph();
+    g->create(duesseldorfStreets);
 
     return 0;
 }
