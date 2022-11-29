@@ -38,9 +38,10 @@ namespace Core
 
     o5mFile::o5mFile()
     {
-        //Reserve space for 20M nodes and 1M ways
+        //Reserve space for 20M nodes and 2x 1.5M ways
         _nodeVector.reserve(20000000);
-        _wayVector.reserve(1000000);
+        _wayVector_1.reserve(1500000);
+        _wayVector_2.reserve(1500000);
 
         //Init string pair table
         for(uint32_t i = 0; i < STRING_TABLE_SIZE; i++)
@@ -122,7 +123,8 @@ namespace Core
                                 rawNodes,
                                 lengthOfData,
                                 &_stringPairTable,
-                                &_currentTableIndex
+                                &_currentTableIndex,
+                                &_nodeMap
                             )
                         );
 
@@ -131,7 +133,7 @@ namespace Core
                 }
 
                 //Process way
-                else if(currentByte[0] == 17 && _wayVector.size() < 1000000) //To read the first 1M ways
+                else if(currentByte[0] == 17) //Process of 3M ways for now
                 {
                     processWays = true;
 
@@ -169,16 +171,35 @@ namespace Core
                         //std::cout << "\n\n";
                         //Utility::Display_ui8Vec(rawWays, rawWays.size());
 
-                        //Create and push back the created way
-                        _wayVector.push_back
-                        (
-                            Utility::ProcessWay
+                        //Read first 1.5M ways in first vector
+                        if(_wayVector_1.size() < 1500000)
+                        {
+                            //Create and push back the created way
+                            _wayVector_1.push_back
                             (
-                                _wayVector.size(),
-                                rawWays,
-                                lengthOfData
-                            )
-                        );
+                                Utility::ProcessWay
+                                (
+                                    _wayVector_1.size(),
+                                    rawWays,
+                                    lengthOfData
+                                )
+                            );
+                        }
+
+                        //Read second 1.5M ways in second vector
+                        else if(_wayVector_2.size() < 1500000)
+                        {
+                            //Create and push back the created way
+                            _wayVector_2.push_back
+                            (
+                                Utility::ProcessWay
+                                (
+                                    _wayVector_1.size() + _wayVector_2.size(),
+                                    rawWays,
+                                    lengthOfData
+                                )
+                            );
+                        }
 
                         rawWays.clear();
                     }
@@ -187,7 +208,7 @@ namespace Core
                 //Reset byte
                 else if(currentByte[0] == 255)
                 {
-                    Utility::ResetDeltaCounters();
+                    //Utility::ResetDeltaCounters();
                 }
 
                 //Update file progress
@@ -204,6 +225,26 @@ namespace Core
         {
             LOG(ERROR) << "File at: " << filepath << " cannot be opened!";
         }
+    }
+
+    uint64_t o5mFile::GetNodeIndex(uint64_t osmID)
+    {
+        return _nodeMap.at(osmID);
+    }
+
+    nodeVec_t* o5mFile::GetNodeVector()
+    {
+        return &_nodeVector;
+    }
+
+    stringPairTable_t* o5mFile::GetStringPairTable()
+    {
+        return &_stringPairTable;
+    }
+
+    edgeVec_t* o5mFile::GetEdgeVector()
+    {
+        return &_edgeVector;
     }
 
     void o5mFile::DisplayStatistics()
@@ -228,7 +269,7 @@ namespace Core
 
         std::cout << "NodeCount:\t " << _nodeVector.size() << "\n";
         std::cout << "StringCount: " << _currentTableIndex - 1 << "\n";
-        std::cout << "WayCount:\t "  << _wayVector.size() << "\n";
+        std::cout << "WayCount:\t "  << _wayVector_1.size()  + _wayVector_2.size() << "\n";
     }
 
     void o5mFile::DisplayAllNodes()
@@ -265,7 +306,12 @@ namespace Core
     {
         LOG(INFO) << "#############\t DisplayAllWays() \t#############";
 
-        for(const Way_t& way : _wayVector)
+        for(const Way_t& way : _wayVector_1)
+        {
+            DisplayWay(way);
+        }
+
+        for(const Way_t& way : _wayVector_2)
         {
             DisplayWay(way);
         }
@@ -277,7 +323,7 @@ namespace Core
 
         for(uint8_t i = 0; i < 3; i++)
         {
-            DisplayWay(_wayVector.at(i));
+            DisplayWay(_wayVector_1.at(i));
         }
     }
 
@@ -285,9 +331,12 @@ namespace Core
     {
         LOG(INFO) << "#############\t DisplayLastThreeWays() \t#############";
 
-        for(uint64_t i = _wayVector.size() - 3; i < _wayVector.size(); i++)
+        if(_wayVector_2.size() > 0)
         {
-            DisplayWay(_wayVector.at(i));
+            for(uint64_t i = _wayVector_2.size() - 3; i < _wayVector_2.size(); i++)
+            {
+                DisplayWay(_wayVector_2.at(i));
+            }
         }
     }
 }

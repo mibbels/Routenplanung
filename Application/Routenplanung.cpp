@@ -65,18 +65,18 @@ int32_t TestGraph(const std::string& a_strInfile)
 int32_t main()
 {
 
-    // taken from: https://stxxl.org/tags/1.4.1/install_config.html
+    // --- stxxl config -> taken from: https://stxxl.org/tags/1.4.1/install_config.html
 
+#ifdef _WIN32
     stxxl::config * cfg = stxxl::config::get_instance();
-
     stxxl::disk_config disk_win("disk=C:\\Users\\maxib\\stxxl.tmp, 10 GiB, wincall delete");
-    /*  use size = 0 for "autogrow"
-     */
-
-    //disk1.direct = stxxl::disk_config::DIRECT_ON; // force O_DIRECT
-
     cfg->add_disk(disk_win);
-
+#elif __linux__
+    stxxl::config * cfg = stxxl::config::get_instance();
+    stxxl::disk_config disk1("disk=/tmp/stxxl.tmp, 4 GiB, syscall unlink");
+    disk1.direct = stxxl::disk_config::DIRECT_ON;
+    cfg->add_disk(disk1);
+#endif
 
     Core::Logger::Init();
     LOG(INFO) << "#############\t Routenplanungstool \t\t#############";
@@ -88,13 +88,22 @@ int32_t main()
 
     //--- Nodes
     //duesseldorfStreets.DisplayAllNodes();
-    //duesseldorfStreets.DisplayFirstThreeNodes();
-    //duesseldorfStreets.DisplayLastThreeNodes();
+    duesseldorfStreets.DisplayFirstThreeNodes();
+    duesseldorfStreets.DisplayLastThreeNodes();
 
     //--- Ways
     //duesseldorfStreets.DisplayAllWays();
-    //duesseldorfStreets.DisplayFirstThreeWays();
-    //duesseldorfStreets.DisplayLastThreeWays();
+    duesseldorfStreets.DisplayFirstThreeWays();
+    duesseldorfStreets.DisplayLastThreeWays();
+
+    //--- Association example
+    auto index   = duesseldorfStreets.GetNodeIndex(160223); //First node
+    auto nodeVec = duesseldorfStreets.GetNodeVector();
+    auto nodeAt  = nodeVec->at(index);
+
+    auto index2   = duesseldorfStreets.GetNodeIndex(10065269349); //Last node
+    auto nodeVec2 = duesseldorfStreets.GetNodeVector();
+    auto nodeAt2  = nodeVec->at(index2);
 
     //TestGraph("../Res/graph.txt");
     //Core::graph* g = new Core::graph();

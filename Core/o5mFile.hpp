@@ -3,6 +3,7 @@
 #include <thread>
 #include <atomic>
 #include <chrono>
+#include <map>
 
 #include "Datatypes.hpp"
 #include "Logger.hpp"
@@ -15,9 +16,11 @@ namespace Core
         private:
             uint8_t           _header[7] = {0};
             nodeVec_t         _nodeVector;
-            wayVec_t          _wayVector;
+            wayVec_t          _wayVector_1, _wayVector_2;
             stringPairTable_t _stringPairTable;
             uint32_t          _currentTableIndex = 1;
+            nodeMap_t         _nodeMap;                     //Node mapping (osmID, index)
+            edgeVec_t         _edgeVector;
 
             void DisplayNode(const Node_t& node);
             void DisplayWay(const Way_t& way);
@@ -29,13 +32,17 @@ namespace Core
 
         public:
             o5mFile();
-            void ReadIn(const std::string& filepath);
-            void DisplayStatistics();
 
+            void               ReadIn(const std::string& filepath);
+            uint64_t           GetNodeIndex(uint64_t osmID);
+            nodeVec_t*         GetNodeVector();
+            stringPairTable_t* GetStringPairTable();
+            edgeVec_t*         GetEdgeVector();
+
+            void DisplayStatistics();
             void DisplayAllNodes();
             void DisplayFirstThreeNodes();
             void DisplayLastThreeNodes();
-
             void DisplayAllWays();
             void DisplayFirstThreeWays();
             void DisplayLastThreeWays();

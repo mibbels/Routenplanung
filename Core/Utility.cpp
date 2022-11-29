@@ -62,7 +62,8 @@ namespace Core
         const std::vector<uint8_t>& nodeData,
         uint8_t                     dataLength,
         stringPairTable_t*          strPairTable,
-        uint32_t*                   currTableIndex
+        uint32_t*                   currTableIndex,
+        nodeMap_t*                  nodeMap
     )
     {
         static double currentLat = 0.0;
@@ -128,6 +129,9 @@ namespace Core
                 oldIndex -= currentByte;
             }
         }
+
+        //Save node mapping (osmID, index)
+        nodeMap->insert(std::pair<uint64_t, uint64_t>(_nodeDeltaCounter, nodeCount));
 
         return
         {

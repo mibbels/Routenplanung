@@ -28,7 +28,8 @@ namespace Core
                                 const std::vector<uint8_t>& nodeData,
                                 uint8_t                     dataLength,
                                 stringPairTable_t*          strPairTable,
-                                uint32_t*                   currTableIndex
+                                uint32_t*                   currTableIndex,
+                                nodeMap_t*                  nodeMap
                            );
             static Way_t   ProcessWay
                            (
