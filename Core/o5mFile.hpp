@@ -14,6 +14,7 @@ namespace Core
 {
     class o5mFile
     {
+        friend class graph;
         private:
             uint8_t           _header[7]           = {0};   //File header
             nodeVec_t         _nodeVector;                  //Node storage
