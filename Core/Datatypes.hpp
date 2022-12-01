@@ -29,6 +29,7 @@ namespace Core
         uint64_t weight;
     };
 
+    typedef stxxl::VECTOR_GENERATOR<bool>::result    booleanVec_t;
     typedef stxxl::VECTOR_GENERATOR<uint8_t>::result ui8Vec_t;
     typedef stxxl::VECTOR_GENERATOR<int16_t>::result i16Vec_t;
     typedef stxxl::VECTOR_GENERATOR<int32_t>::result i32Vec_t;

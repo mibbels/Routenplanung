@@ -116,8 +116,11 @@ int32_t main()
     //auto nodeAt2  = nodeVec2->at(index2);
 
     //TestGraph("../Res/graph.txt");
-    //Core::graph* g = new Core::graph();
-    //g->create(duesseldorfStreets);
+
+    Core::graph* g = new Core::graph();
+    g->create(duesseldorfStreets);
+
+    g->DijkstraShortestPath(143598317, 143598305, duesseldorfStreets);
 
     return 0;
 }

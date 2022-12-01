@@ -2,31 +2,11 @@
 
 namespace Core
 {
-    /*
-    //--------------------------------------------------------------------------------------------------------------------//
-    edge* ComponentsToEdge(const EdgeComponents& a_edgeComponents)
-    {
-        return new edge(std::get<0>(a_edgeComponents), std::get<1>(a_edgeComponents), std::get<2>(a_edgeComponents));
-    }
-
-    //--------------------------------------------------------------------------------------------------------------------//
-    void graph::SetStringHashes(std::unordered_map<std::string, int>& a_mapStringHashes)
-    {
-        m_mapStringHashes = a_mapStringHashes;
-    }
-    */
-
     //--------------------------------------------------------------------------------------------------------------------//
     void graph::create(o5mFile &a_file)
     {
         m_nodeVec = a_file.GetNodeVector();
         m_edgeVec = a_file.GetEdgeVector();
-        m_wayVec  = a_file.GetWayVector(); //Braucht du den?
-
-        nodeVec_t::const_iterator nodeIter = m_nodeVec->begin();
-        edgeVec_t::const_iterator edgeIter = m_edgeVec->begin();
-
-        uint64_t nodeIterCounter = 0, wayIterCounter = 0, iNodeID;
 
         /* from https://stxxl.org/tags/master/design_vector.html#design_vector_notes:
          * Warning
@@ -34,22 +14,7 @@ namespace Core
          * invalidated during any following access to elements of the vector
          */
 
-        uint64_t iNodeCode = a_file.GetNodeIndex(10065269349);
-        Node_t nodeExample = m_nodeVec->at(iNodeCode);
 
-        /*
-         * ########## !!! IMPORTANT !!! ########## // Stand November
-         *
-         * original goal of this section: map a start-node s to all its outgoing edges
-         *      m_mapEdges = (node : vec(edges))
-         *      to achieve this I originally sorted a vector of edges by its starting-node, to then
-         *      iteratively fill the map by taking a group of edges, until a new starting-node appears
-         *
-         *      temporal assumptions for the behaviour of "ways":
-         *          - Way_t = Edge as a 3-tuple of (start, end, weight)
-         *          - Way_t.nodeRefs is sorted -> element 0 and n can be seen as "start-" and "end-node"
-         *          - weight is defined by Way_t.nodeRefs.size()
-         */
 
         //sort ways by nodeRefs[0]
         /*
@@ -74,81 +39,99 @@ namespace Core
         while (it != m_edgeVec->end())
         {
             Edge_t currEdge = *it;
-            uint64_t iCurrStartNode= currEdge.startNode;
+            uint64_t iCurrStartNodeOsmID= currEdge.startNode;
+            uint64_t iCurrStartNodeIndex= a_file.GetNodeIndex(currEdge.startNode);
 
-            std::vector<uint64_t> vecNeighbourCodes;
+            //std::vector<uint64_t> vecNeighbourCodes;
+            std::vector<Edge_t> vecNeighbourCodes;
             int iOffset = 1;
 
-           vecNeighbourCodes.push_back(currEdge.endNode);
+           //vecNeighbourCodes.push_back(currEdge.endNode);
+            vecNeighbourCodes.push_back(currEdge);
 
             while(it + iOffset != m_edgeVec->end())
             {
                 Edge_t nextEdge = *(it + iOffset);
 
-                if (iCurrStartNode != nextEdge.startNode)
+                if (iCurrStartNodeOsmID != nextEdge.startNode)
                 {
                     break;
                 }
-                vecNeighbourCodes.push_back(nextEdge.endNode);
+                //vecNeighbourCodes.push_back(a_file.GetNodeIndex(nextEdge.endNode));
+                vecNeighbourCodes.push_back(nextEdge);
                 iOffset++;
             }
             it += iOffset;
 
-            m_mapEdges.insert(std::make_pair(iCurrStartNode, vecNeighbourCodes));
+
+            //m_mapEdges.insert(std::make_pair(iCurrStartNode, vecNeighbourCodes));
+            m_mapEdges.insert(std::make_pair(iCurrStartNodeIndex, vecNeighbourCodes));
         }
+        LOG(INFO) << "create graph mapping";
     }
 
     //--------------------------------------------------------------------------------------------------------------------//
-    /*
-    std::vector<edge*> graph::GetEdge(const int a_iNameCode) const
-    {
-        try
-        {
-            mapIntEdgeSet::const_iterator it = m_mapEdges.find(a_iNameCode);
-            return it->second->edges;
-        }
-        catch (std::out_of_range &err)
-        {
-            return std::vector<edge*>{};
-        }
-    }
-
-    //--------------------------------------------------------------------------------------------------------------------//
-    node* graph::GetNode(const int a_iNameCode) const
-    {
-        try
-        {
-            //return m_mapNodes.at(a_iNameCode);
-            mapIntNodePointer::const_iterator it = m_mapNodes.find(a_iNameCode);
-            return &(*it->second);
-        }
-        catch (std::out_of_range &err)
-        {
-            //TODO
-        }
-    }
-    */
-
-    //--------------------------------------------------------------------------------------------------------------------//
-    std::vector<uint64_t> graph::DijkstraShortestPath(uint64_t a_iStartNode, uint64_t a_iEndNode)
+    std::vector<uint64_t> graph::DijkstraShortestPath(uint64_t a_uiStartOsmID, uint64_t a_uiEndOsmID, o5mFile &a_file)
     {
 
-        std::vector<uint64_t>                   vecShortestPath;
-        std::unordered_set<uint64_t>            setVisited;
+        std::vector<uint64_t>   vecShortestPath;
+        booleanVec_t            vecVisited;
+        i64Vec_t                vecDistance;
+        i64Vec_t                vecPreviousNode;
 
-        std::unordered_map<uint64_t, uint64_t>  mapDistance;
-        std::unordered_map<uint64_t, uint64_t>  mapPreviousNode;
+        uint64_t                uiNodeIndex;
+        uint64_t                uiNodeOsmID;
+        uint64_t                uiStartIndex = a_file.GetNodeIndex(a_uiStartOsmID);
+        uint64_t                uiEndIndex   = a_file.GetNodeIndex(a_uiEndOsmID);
 
-        uint64_t                                iNodeCode;
+        //vecPreviousNode.reserve(m_nodeVec->size());
+        //vecDistance.reserve(m_nodeVec->size());
+        //vecVisited.reserve(m_nodeVec->size());
 
-        mapPreviousNode.reserve(m_nodeVec->size());
-        mapDistance.reserve(m_nodeVec->size());
-
+        vecPreviousNode.resize(m_nodeVec->size());
+        vecDistance.resize(m_nodeVec->size());
+        vecVisited.resize(m_nodeVec->size());
+        /*
         auto compare  = [](std::pair<uint64_t, uint64_t> a, std::pair<uint64_t, uint64_t> b)
                 {return a.second > b.second;};
 
         std::priority_queue<std::pair<uint64_t, uint64_t>, std::vector<std::pair<uint64_t, uint64_t>>,
         decltype(compare)> PQ(compare );
+         */
+
+        //typedef stxxl::tuple<uint64_t, uint64_t> uint64_pair_type;
+        typedef stxxl::tuple<int64_t, int64_t> uint64_pair_type;
+
+        /*
+        struct dist_pair
+        {
+            uint64_pair_type data;
+        };
+         */
+
+        struct cmp_lt
+        {
+            bool operator () (const uint64_pair_type& a, const uint64_pair_type& b) const
+            {
+                return (a.second < b.second);
+            }
+
+            uint64_pair_type min_value() const
+            {
+                return stxxl::tuple<int64_t, int64_t> {-1,-1};
+            }
+        };
+
+        typedef stxxl::PRIORITY_QUEUE_GENERATOR<uint64_pair_type, cmp_lt, 128*1024*1024, 1024*1024>::result pqueue_type;
+
+        typedef pqueue_type::block_type block_type;
+        const unsigned int mem_for_pools = 16 * 1024 * 1024;
+        stxxl::read_write_pool<block_type> pool((mem_for_pools / 2) / block_type::raw_size,
+                                                (mem_for_pools / 2) / block_type::raw_size);
+        pqueue_type PQ(pool);
+
+        //uint64_t iNodeCode = a_file.GetNodeIndex(10065269349);
+        //Node_t nodeExample = m_nodeVec->at(iNodeCode);
 
         nodeVec_t::const_iterator it;
         it = m_nodeVec->begin();
@@ -156,37 +139,39 @@ namespace Core
         while (it != m_nodeVec->end())
         {
             Node_t currNode = *it;
-            iNodeCode= currNode.index; // or .nodeCount
+            uiNodeIndex= currNode.index;
 
-            if (iNodeCode != a_iStartNode)
+            if (uiNodeIndex != uiStartIndex)
             {
-                mapDistance[iNodeCode] = INT_MAX/2; //!!!!!!!!!!!!!!!!!!!
+                vecDistance[uiNodeIndex] = INT64_MAX/2; //!!!!!!!!!!!!!!!!!!!
             }
             else
             {
-                mapDistance[iNodeCode] = 0;
+                vecDistance[uiNodeIndex] = 0;
             }
 
-            mapPreviousNode[iNodeCode] = NULL;
-            PQ.push(std::make_pair(iNodeCode, mapDistance[iNodeCode]));
+            vecPreviousNode[uiNodeIndex] = -1;
+
+            PQ.push(uint64_pair_type(uiNodeIndex, vecDistance[uiNodeIndex]));
 
             it++;
         }
+        LOG(INFO) << "filled PQ";
 
-        std::vector<uint64_t> vecNeighbours;
-        int iAltDistance = 0;
+        //std::vector<uint64_t> vecNeighbours;
+        std::vector<Edge_t> vecNeighbours;
+        uint64_t iAltDistance = 0;
 
         while(PQ.size() != 0)
         {
-            std::pair<int, int> PQNodePair = PQ.top();
+            uint64_pair_type pairNodeDist = PQ.top();
             PQ.pop();
-
 
             // keep track of visited nodes, as to not unnecessarily visit old elements (see further down)
 
-            if (setVisited.find(PQNodePair.first) == setVisited.end())
+            if (vecVisited[pairNodeDist.first] == FALSE)
             {
-                setVisited.insert(PQNodePair.first);
+                vecVisited[pairNodeDist.first] = TRUE;
             }
             else
             {
@@ -195,46 +180,53 @@ namespace Core
 
             try
             {
-                vecNeighbours = m_mapEdges[PQNodePair.first];
+                vecNeighbours = m_mapEdges[pairNodeDist.first]; // lookup needed?
             }
             catch(std::out_of_range)
             {
                 continue;
             }
 
-            for (uint64_t iEndNode : vecNeighbours)
+            //for (uint64_t iEndNode : vecNeighbours)
+            for (Edge_t e : vecNeighbours)
             {
-                uint64_t iWeight = 0;
-                iAltDistance = iWeight + mapDistance.at(PQNodePair.first);
-                if (iAltDistance < mapDistance.at(iEndNode))
+                uint64_t uiWeight = e.weight;
+                uint64_t uiEdgeEndNodeIndex = a_file.GetNodeIndex(e.endNode);
+
+                iAltDistance = uiWeight + vecDistance[pairNodeDist.first];
+
+                if (iAltDistance < vecDistance[uiEdgeEndNodeIndex])
                 {
-                    mapDistance.at(iEndNode) = iAltDistance;
-                    mapPreviousNode[iEndNode] = PQNodePair.first;
+                    vecDistance[uiEdgeEndNodeIndex] = iAltDistance;
+                    vecPreviousNode[uiEdgeEndNodeIndex] = pairNodeDist.first;
 
                      //std::priority_queue does not implement a decrease-key type function.
                      // old element remains as dead weight.
 
-                    PQ.push(std::make_pair(iEndNode, iAltDistance));
+                    PQ.push(uint64_pair_type(uiEdgeEndNodeIndex, iAltDistance));
+                    LOG(INFO) << "update PQ";
                 }
 
             }
         }
 
-        iNodeCode = a_iEndNode;
-        while (iNodeCode != a_iStartNode)
-        {
-            vecShortestPath.push_back(iNodeCode);
-            iNodeCode = mapPreviousNode[iNodeCode];
+        LOG(INFO) << "found shortest path!";
 
-            if (iNodeCode == a_iStartNode)
+        uiNodeIndex = uiEndIndex;
+        while (uiNodeIndex != uiStartIndex)
+        {
+            vecShortestPath.push_back(m_nodeVec->at(uiNodeIndex).osmID);
+            uiNodeIndex = vecPreviousNode[uiNodeIndex];
+
+            if (uiNodeIndex == uiStartIndex)
             {
-                vecShortestPath.push_back(iNodeCode);
+                vecShortestPath.push_back(m_nodeVec->at(uiNodeIndex).osmID);
             }
         }
 
         std::reverse(vecShortestPath.begin(), vecShortestPath.end());
 
-        //LOG(INFO) << mapDistance[iEndNodeHash];
+        LOG(INFO) << vecDistance[uiEndIndex];
 
         return vecShortestPath;
     }

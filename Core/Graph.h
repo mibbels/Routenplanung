@@ -45,12 +45,9 @@ namespace Core
 
         void create(o5mFile &a_file);
 
-        //void PrintNodes(const std::vector<node*>& a_vecNodes) const;
-
-        //node* GetNode(int a_iNameCode) const;
-        //std::vector<edge*> GetEdge(int a_iNameCode) const;
-
-        std::vector<uint64_t> DijkstraShortestPath(uint64_t a_iStartNode, uint64_t a_iEndNode);
+        std::vector<uint64_t> DijkstraShortestPath(uint64_t a_uiStartOsmID,
+                                                   uint64_t a_uiEndOsmID,
+                                                   o5mFile &a_file);
 
         //std::vector<node*> a_starShortestPath(std::string a_strStartNodeName,
          //                                     std::string a_strEndNodeName);
@@ -66,7 +63,8 @@ namespace Core
         edgeVec_t                                   *m_edgeVec;
 
         //test with heap-version first
-        std::unordered_map<uint64_t, std::vector<uint64_t>> m_mapEdges;
+        //std::unordered_map<uint64_t, std::vector<uint64_t>> m_mapEdges;
+        std::unordered_map<uint64_t, std::vector<Edge_t>> m_mapEdges;
 
         /*
         mapIntEdgeSet m_mapEdges{(mapIntEdgeSet::node_block_type::raw_size) * 3,
