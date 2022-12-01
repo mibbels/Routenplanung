@@ -69,7 +69,7 @@ int32_t main()
 
 #ifdef _WIN32
     stxxl::config * cfg = stxxl::config::get_instance();
-    stxxl::disk_config disk_win("disk=C:\\Users\\maxib\\stxxl.tmp, 10 GiB, wincall delete");
+    stxxl::disk_config disk_win("disk=C:\\Users\\maxib\\stxxl.tmp, 4 GiB, wincall delete");
     cfg->add_disk(disk_win);
 #elif __linux__
     stxxl::config * cfg = stxxl::config::get_instance();
