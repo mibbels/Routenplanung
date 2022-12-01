@@ -8,8 +8,8 @@ namespace Core
 
     struct __attribute__((__packed__)) Node_t
     {
-        uint64_t nodeCount;
-        uint64_t id;
+        uint64_t index;
+        uint64_t osmID;
         double   lat;
         double   lon;
         uint32_t stringTableIndex;
@@ -17,9 +17,9 @@ namespace Core
 
     struct Way_t
     {
-        uint64_t              wayCount;
-        uint64_t              id;
-        std::vector<uint64_t> nodeRefs;
+        uint64_t index;
+        uint64_t osmID;
+        uint64_t refNodeCount;
     };
 
     struct Edge_t

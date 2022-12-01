@@ -66,7 +66,6 @@ int32_t main()
 {
 
     // --- stxxl config -> taken from: https://stxxl.org/tags/1.4.1/install_config.html
-
 #ifdef _WIN32
     stxxl::config * cfg = stxxl::config::get_instance();
     stxxl::disk_config disk_win("disk=C:\\Users\\maxib\\stxxl.tmp, 10 GiB, wincall delete");
@@ -79,7 +78,7 @@ int32_t main()
 #endif
 
     Core::Logger::Init();
-    LOG(INFO) << "#############\t Routenplanungstool \t\t#############";
+    LOG(INFO) << "#############\t Routenplanung \t\t#############";
 
     //--- General
     Core::o5mFile duesseldorfStreets;
@@ -90,20 +89,31 @@ int32_t main()
     //duesseldorfStreets.DisplayAllNodes();
     duesseldorfStreets.DisplayFirstThreeNodes();
     duesseldorfStreets.DisplayLastThreeNodes();
+    duesseldorfStreets.DisplayLastThreeStringTableEntries();
 
     //--- Ways
     //duesseldorfStreets.DisplayAllWays();
     duesseldorfStreets.DisplayFirstThreeWays();
     duesseldorfStreets.DisplayLastThreeWays();
 
-    //--- Association example
-    auto index   = duesseldorfStreets.GetNodeIndex(160223); //First node
-    auto nodeVec = duesseldorfStreets.GetNodeVector();
-    auto nodeAt  = nodeVec->at(index);
+    //--- Edges
+    //duesseldorfStreets.DisplayAllEdges();
+    duesseldorfStreets.DisplayFirstThreeEdges();
+    duesseldorfStreets.DisplayLastThreeEdges();
 
-    auto index2   = duesseldorfStreets.GetNodeIndex(10065269349); //Last node
-    auto nodeVec2 = duesseldorfStreets.GetNodeVector();
-    auto nodeAt2  = nodeVec->at(index2);
+    // --- Sort edges
+    duesseldorfStreets.SortEdgesAscending();
+    duesseldorfStreets.DisplayFirstThreeEdges();
+    duesseldorfStreets.DisplayLastThreeEdges();
+
+    //--- Association example
+    //auto index   = duesseldorfStreets.GetNodeIndex(160223); //First node
+    //auto nodeVec = duesseldorfStreets.GetNodeVector();
+    //auto nodeAt  = nodeVec->at(index);
+
+    //auto index2   = duesseldorfStreets.GetNodeIndex(10065269349); //Last node
+    //auto nodeVec2 = duesseldorfStreets.GetNodeVector();
+    //auto nodeAt2  = nodeVec2->at(index2);
 
     //TestGraph("../Res/graph.txt");
     //Core::graph* g = new Core::graph();

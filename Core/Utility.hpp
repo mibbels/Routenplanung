@@ -7,11 +7,6 @@ namespace Core
 {
     class Utility
     {
-        private:
-            inline static uint64_t _nodeDeltaCounter    = uint64_t();
-            inline static uint64_t _wayDeltaCounter     = uint64_t();
-            inline static uint64_t _refNodeDeltaCounter = uint64_t();
-
         public:
 
             //--- General utility
@@ -19,24 +14,6 @@ namespace Core
             static bool     BitIsSet(uint32_t value, uint32_t index);
             static bool     ArrayGotValue(const uint8_t* arr, uint8_t length, uint8_t index);
             static bool     ArrayCompareContent(const uint8_t* fileData, const uint8_t* compareData, uint8_t dataSize);
-
-            //--- Data processing
-            static void    ResetDeltaCounters();
-            static Node_t  ProcessNode
-                           (
-                                uint64_t                    nodeCount,
-                                const std::vector<uint8_t>& nodeData,
-                                uint8_t                     dataLength,
-                                stringPairTable_t*          strPairTable,
-                                uint32_t*                   currTableIndex,
-                                nodeMap_t*                  nodeMap
-                           );
-            static Way_t   ProcessWay
-                           (
-                                uint64_t                    wayCount,
-                                const std::vector<uint8_t>& wayData,
-                                uint64_t                    dataLength
-                           );
 
             //--- Data visualization
             static void    Display_ui8Vec(const std::vector<uint8_t>& vector, uint8_t numberOfBytes);
