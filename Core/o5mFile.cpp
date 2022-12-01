@@ -382,6 +382,11 @@ namespace Core
         return &_stringPairTable;
     }
 
+    wayVec_t* o5mFile::GetWayVector()
+    {
+        return &_wayVector;
+    }
+
     edgeVec_t* o5mFile::GetEdgeVector()
     {
         return &_edgeVector;

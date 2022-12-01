@@ -19,11 +19,13 @@ namespace Core
     //--------------------------------------------------------------------------------------------------------------------//
     void graph::create(o5mFile &a_file)
     {
-        m_nodeVec = &a_file._nodeVector;
-        m_edgeVec  = &a_file._edgeVector;
+        m_nodeVec = a_file.GetNodeVector();
+        m_edgeVec = a_file.GetEdgeVector();
+        m_wayVec  = a_file.GetWayVector(); //Braucht du den?
 
-        nodeVec_t::const_iterator nodeIter = a_file._nodeVector.begin();
-        wayVec_t::const_iterator wayIter = a_file._wayVector_1.begin();
+        nodeVec_t::const_iterator nodeIter = m_nodeVec->begin();
+        edgeVec_t::const_iterator edgeIter = m_edgeVec->begin();
+
         uint64_t nodeIterCounter = 0, wayIterCounter = 0, iNodeID;
 
         /* from https://stxxl.org/tags/master/design_vector.html#design_vector_notes:
@@ -154,7 +156,7 @@ namespace Core
         while (it != m_nodeVec->end())
         {
             Node_t currNode = *it;
-            iNodeCode= currNode.id; // or .nodeCount
+            iNodeCode= currNode.index; // or .nodeCount
 
             if (iNodeCode != a_iStartNode)
             {
@@ -241,7 +243,6 @@ namespace Core
     //--------------------------------------------------------------------------------------------------------------------//
     int h(int a_iCurrentNode, int a_iEndNode)
     {
-        //*
         // * heuristic-function estimating the cost of navigating from current- to end-node.
         // * if h(x,y) = 0 for all Nodes x,y, a* algorithm equals dijkstra's algorithm.
         // *

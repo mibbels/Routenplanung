@@ -14,7 +14,6 @@ namespace Core
 {
     class o5mFile
     {
-        friend class graph;
         private:
             uint8_t           _header[7]           = {0};   //File header
             nodeVec_t         _nodeVector;                  //Node storage
@@ -50,6 +49,7 @@ namespace Core
             uint64_t           GetNodeIndex(uint64_t osmID);
             nodeVec_t*         GetNodeVector();
             stringPairTable_t* GetStringPairTable();
+            wayVec_t*          GetWayVector();
             edgeVec_t*         GetEdgeVector();
             void               SortEdgesAscending();
 
