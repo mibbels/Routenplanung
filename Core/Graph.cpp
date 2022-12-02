@@ -33,8 +33,8 @@ namespace Core
 
         //IF SORTED: find all edges/ways belonging to a start-node by iterating until new start-node is found
 
-        edgeVec_t::const_iterator it;
-        it = m_edgeVec->begin();
+        //edgeVec_t::const_iterator it;
+        auto it = m_edgeVec->begin();
 
         while (it != m_edgeVec->end())
         {
@@ -67,7 +67,7 @@ namespace Core
             //m_mapEdges.insert(std::make_pair(iCurrStartNode, vecNeighbourCodes));
             m_mapEdges.insert(std::make_pair(iCurrStartNodeIndex, vecNeighbourCodes));
         }
-        LOG(INFO) << "create graph mapping";
+        LOG(INFO) << "Create graph mapping ...";
     }
 
     //--------------------------------------------------------------------------------------------------------------------//
@@ -133,8 +133,8 @@ namespace Core
         //uint64_t iNodeCode = a_file.GetNodeIndex(10065269349);
         //Node_t nodeExample = m_nodeVec->at(iNodeCode);
 
-        nodeVec_t::const_iterator it;
-        it = m_nodeVec->begin();
+        //nodeVec_t::const_iterator it;
+        auto it = m_nodeVec->begin();
 
         while (it != m_nodeVec->end())
         {
@@ -156,7 +156,7 @@ namespace Core
 
             it++;
         }
-        LOG(INFO) << "filled PQ";
+        LOG(INFO) << "Filled PQ!";
 
         //std::vector<uint64_t> vecNeighbours;
         std::vector<Edge_t> vecNeighbours;
@@ -169,9 +169,9 @@ namespace Core
 
             // keep track of visited nodes, as to not unnecessarily visit old elements (see further down)
 
-            if (vecVisited[pairNodeDist.first] == FALSE)
+            if (vecVisited[pairNodeDist.first] == false)
             {
-                vecVisited[pairNodeDist.first] = TRUE;
+                vecVisited[pairNodeDist.first] = true;
             }
             else
             {
@@ -204,13 +204,13 @@ namespace Core
                      // old element remains as dead weight.
 
                     PQ.push(uint64_pair_type(uiEdgeEndNodeIndex, iAltDistance));
-                    LOG(INFO) << "update PQ";
+                    LOG(INFO) << "Update PQ!";
                 }
 
             }
         }
 
-        LOG(INFO) << "found shortest path!";
+        LOG(INFO) << "Found shortest path!";
 
         uiNodeIndex = uiEndIndex;
         while (uiNodeIndex != uiStartIndex)
@@ -226,7 +226,7 @@ namespace Core
 
         std::reverse(vecShortestPath.begin(), vecShortestPath.end());
 
-        LOG(INFO) << vecDistance[uiEndIndex];
+        LOG(INFO) << "vecDistance[uiEndIndex]: " << vecDistance[uiEndIndex];
 
         return vecShortestPath;
     }

@@ -2,7 +2,6 @@
 #include "Datatypes.hpp"
 #include "o5mFile.hpp"
 #include "Graph.h"
-#include "Utility.hpp"
 
 /*
 int32_t TestGraph(const std::string& a_strInfile)
@@ -117,10 +116,9 @@ int32_t main()
 
     //TestGraph("../Res/graph.txt");
 
-    Core::graph* g = new Core::graph();
-    g->create(duesseldorfStreets);
-
-    g->DijkstraShortestPath(143598317, 143598305, duesseldorfStreets);
+    Core::graph g;
+    g.create(duesseldorfStreets);
+    g.DijkstraShortestPath(143598317, 143598305, duesseldorfStreets);
 
     return 0;
 }

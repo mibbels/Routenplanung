@@ -236,10 +236,6 @@ namespace Core
 
     double Utility::DeltaDecode_Float(const uint8_t* rawData)
     {
-        /*uint32_t value;
-        DeltaDecode_Int32(rawData, &value);
-        value /=
-        return ((double)(value))/pow(10.0, 7.0);*/
         return (double)DeltaDecode_Int32(rawData) / pow(10.0, 7.0);
     }
 
