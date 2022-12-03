@@ -44,24 +44,22 @@ namespace Core
     typedef std::array<stringPair_t, STRING_TABLE_SIZE> stringPairTable_t;
     typedef std::unordered_map<uint64_t, uint64_t>      nodeMap_t;          //Node mapping (osmID, index)
 
-    typedef stxxl::tuple<int64_t, int64_t> int64tuple_t;
+    typedef stxxl::tuple<uint64_t, uint64_t> uint64tuple_t;
 
-    struct cmpLTint64tuple
+    struct cmpGreateruint64tuple
     {
-        //stxxl pqueue requires (min_value(), x) to be true for every x
-        //minimum nodeMap-key is 0, min_value() must thus be < 0
-        bool operator () (const int64tuple_t& a, const int64tuple_t& b) const
+        bool operator () (const uint64tuple_t& a, const uint64tuple_t& b) const
         {
-            return (a.second < b.second);
+            return (a.second > b.second);
         }
 
-        int64tuple_t min_value() const
+        uint64tuple_t min_value() const
         {
-            return stxxl::tuple<int64_t, int64_t> {-1,-1};
+            return stxxl::tuple<uint64_t, uint64_t> {UINT64_MAX,UINT64_MAX};
         }
     };
 
-    typedef stxxl::PRIORITY_QUEUE_GENERATOR<int64tuple_t, cmpLTint64tuple, 128*1024*1024, 19000000/1024>::result pqueue_type;
+    typedef stxxl::PRIORITY_QUEUE_GENERATOR<uint64tuple_t, cmpGreateruint64tuple, 128*1024*1024, 19000000/1024>::result pqueue_type;
 
 
 }

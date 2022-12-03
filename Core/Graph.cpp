@@ -62,12 +62,25 @@ namespace Core
         vecDistance.resize(m_nodeVec->size());
         vecVisited.resize(m_nodeVec->size());
 
+
         const unsigned int mem_for_pools = 16 * 1024 * 1024;
         stxxl::read_write_pool<pqueue_type::block_type>
                 pool((mem_for_pools / 2) / pqueue_type::block_type::raw_size,
                      (mem_for_pools / 2) / pqueue_type::block_type::raw_size);
 
         pqueue_type PQ(pool);
+
+        /*
+        auto compare  = []
+                (const uint64tuple_t& a, const uint64tuple_t& b)
+                {
+                    return a.second > b.second;
+                };
+        std::priority_queue<uint64tuple_t, std::vector<uint64tuple_t>, decltype(compare)> PQ(compare );
+        */
+
+
+        LOG(INFO) << "---------";
 
         /*
         auto it = m_nodeVec->begin();
@@ -88,11 +101,11 @@ namespace Core
             // add placeholder "NULL"
             vecPreviousNode[uiNodeIndex] = -1;
 
-            PQ.push(int64tuple_t(uiNodeIndex, vecDistance[uiNodeIndex]));
+            PQ.push(uint64tuple_t(uiNodeIndex, vecDistance[uiNodeIndex]));
 
             it++;
         }
-        */
+         */
 
         i64Vec_t::bufwriter_type distWriter(vecDistance);
         i64Vec_t::bufwriter_type prevWriter(vecPreviousNode);
@@ -103,10 +116,14 @@ namespace Core
             distWriter << INT64_MAX * .6;
             prevWriter << -1LL;
             visitWriter << false;
-            PQ.push(int64tuple_t(i, INT64_MAX * .6)); // !!!!!!!!
+            PQ.push(uint64tuple_t(i, INT64_MAX * .6)); // !!!!!!!!
         }
+        distWriter.finish();
+        visitWriter.finish();
+        visitWriter.finish();
+
         vecDistance[uiStartIndex] = 0;
-        PQ.push(int64tuple_t(uiStartIndex, 0)); // !!!!!!!!!!!
+        PQ.push(uint64tuple_t(uiStartIndex, 0)); // !!!!!!!!!!!
 
         LOG(INFO) << "Filled PQ!";
 
@@ -114,10 +131,20 @@ namespace Core
         std::vector<Edge_t> vecNeighbours;
         uint64_t iAltDistance = 0;
 
+        uint64_t count = 0;
         while(PQ.size() != 0)
         {
-            int64tuple_t pairNodeDist = PQ.top();
+            uint64tuple_t pairNodeDist = PQ.top();
             PQ.pop();
+
+            count++;
+            if (count == 100000)
+            {
+                PQ.dump_sizes();
+                //LOG(INFO) << PQ.size();
+                count = 0;
+            }
+
 
             // keep track of visited nodes, as to not unnecessarily visit old elements (see further down)
 
@@ -148,7 +175,7 @@ namespace Core
                      //stxxl pqueue does not implement a decrease-key type function
                      // old element remains as dead weight
 
-                    PQ.push(int64tuple_t(uiEdgeEndNodeIndex, iAltDistance));
+                    PQ.push(uint64tuple_t(uiEdgeEndNodeIndex, iAltDistance));
                     LOG(INFO) << "Update PQ!";
                 }
             }

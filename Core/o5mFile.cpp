@@ -299,8 +299,8 @@ namespace Core
                 }
 
                 //Process way
-                //else if(currentByte[0] == 17 && _wayVector.size() < 3137873)
-                else if(currentByte[0] == 17 && _wayVector.size() < 90000)
+                else if(currentByte[0] == 17 && _wayVector.size() < 3137873)
+                //else if(currentByte[0] == 17 && _wayVector.size() < 90000)
                 {
                     processWays = true;
 
