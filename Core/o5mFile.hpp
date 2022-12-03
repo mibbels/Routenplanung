@@ -48,9 +48,11 @@ namespace Core
             void               ReadIn(const std::string& filepath);
             uint64_t           GetNodeIndex(uint64_t osmID);
             nodeVec_t*         GetNodeVector();
+            const nodeVec_t*   GetNodeVectorConst();
             stringPairTable_t* GetStringPairTable();
             wayVec_t*          GetWayVector();
             edgeVec_t*         GetEdgeVector();
+            const edgeVec_t*    GetEdgeVectorConst();
             void               SortEdgesAscending();
 
             //--- Displaying

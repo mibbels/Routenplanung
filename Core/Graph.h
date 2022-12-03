@@ -58,13 +58,13 @@ namespace Core
 
     private:
 
-        nodeVec_t                                   *m_nodeVec;
-        wayVec_t                                    *m_wayVec;
-        edgeVec_t                                   *m_edgeVec;
+        const nodeVec_t                                     *m_nodeVec;
+        const wayVec_t                                      *m_wayVec;
+        const edgeVec_t                                     *m_edgeVec;
 
         //test with heap-version first
         //std::unordered_map<uint64_t, std::vector<uint64_t>> m_mapEdges;
-        std::unordered_map<uint64_t, std::vector<Edge_t>> m_mapEdges;
+        std::unordered_map<uint64_t, std::vector<Edge_t>>   m_mapEdges;
 
         /*
         mapIntEdgeSet m_mapEdges{(mapIntEdgeSet::node_block_type::raw_size) * 3,

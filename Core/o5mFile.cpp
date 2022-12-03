@@ -299,7 +299,8 @@ namespace Core
                 }
 
                 //Process way
-                else if(currentByte[0] == 17 && _wayVector.size() < 3137873)
+                //else if(currentByte[0] == 17 && _wayVector.size() < 3137873)
+                else if(currentByte[0] == 17 && _wayVector.size() < 90000)
                 {
                     processWays = true;
 
@@ -377,6 +378,11 @@ namespace Core
         return &_nodeVector;
     }
 
+    const nodeVec_t* o5mFile::GetNodeVectorConst()
+    {
+        return &_nodeVector;
+    }
+
     stringPairTable_t* o5mFile::GetStringPairTable()
     {
         return &_stringPairTable;
@@ -388,6 +394,11 @@ namespace Core
     }
 
     edgeVec_t* o5mFile::GetEdgeVector()
+    {
+        return &_edgeVector;
+    }
+
+    const edgeVec_t* o5mFile::GetEdgeVectorConst()
     {
         return &_edgeVector;
     }

@@ -5,37 +5,11 @@ namespace Core
     //--------------------------------------------------------------------------------------------------------------------//
     void graph::create(o5mFile &a_file)
     {
-        m_nodeVec = a_file.GetNodeVector();
-        m_edgeVec = a_file.GetEdgeVector();
-
-        /* from https://stxxl.org/tags/master/design_vector.html#design_vector_notes:
-         * Warning
-         * Do not store references to the elements of an external vector. Such references might be
-         * invalidated during any following access to elements of the vector
-         */
-
-
-
-        //sort ways by nodeRefs[0]
-        /*
-        struct cmp_way
-        {
-            bool operator() (Way_t a, Way_t b) const
-            {
-                return a.nodeRefs[0] < b.nodeRefs[0];
-            }
-            Way_t min_value() const { return Way_t{0,0,{0}}; };
-            Way_t max_value() const { return Way_t{0,0,{std::numeric_limits<uint64_t>::max()}}; };
-        };
-
-        stxxl::sort(m_wayVec->begin(), m_wayVec->end(), cmp_way(), 256*1024*1024);
-        */
-
-        //IF SORTED: find all edges/ways belonging to a start-node by iterating until new start-node is found
-
-        //edgeVec_t::const_iterator it;
+        m_nodeVec = a_file.GetNodeVectorConst();
+        m_edgeVec = a_file.GetEdgeVectorConst();
         auto it = m_edgeVec->begin();
 
+        //if sorted, find all edges/ways belonging to a start-node by iterating until new start-node is found
         while (it != m_edgeVec->end())
         {
             Edge_t currEdge = *it;
@@ -67,7 +41,7 @@ namespace Core
             //m_mapEdges.insert(std::make_pair(iCurrStartNode, vecNeighbourCodes));
             m_mapEdges.insert(std::make_pair(iCurrStartNodeIndex, vecNeighbourCodes));
         }
-        LOG(INFO) << "Create graph mapping ...";
+        LOG(INFO) << "Created graph mapping";
     }
 
     //--------------------------------------------------------------------------------------------------------------------//
@@ -84,78 +58,56 @@ namespace Core
         uint64_t                uiStartIndex = a_file.GetNodeIndex(a_uiStartOsmID);
         uint64_t                uiEndIndex   = a_file.GetNodeIndex(a_uiEndOsmID);
 
-        //vecPreviousNode.reserve(m_nodeVec->size());
-        //vecDistance.reserve(m_nodeVec->size());
-        //vecVisited.reserve(m_nodeVec->size());
-
         vecPreviousNode.resize(m_nodeVec->size());
         vecDistance.resize(m_nodeVec->size());
         vecVisited.resize(m_nodeVec->size());
-        /*
-        auto compare  = [](std::pair<uint64_t, uint64_t> a, std::pair<uint64_t, uint64_t> b)
-                {return a.second > b.second;};
 
-        std::priority_queue<std::pair<uint64_t, uint64_t>, std::vector<std::pair<uint64_t, uint64_t>>,
-        decltype(compare)> PQ(compare );
-         */
-
-        //typedef stxxl::tuple<uint64_t, uint64_t> uint64_pair_type;
-        typedef stxxl::tuple<int64_t, int64_t> uint64_pair_type;
-
-        /*
-        struct dist_pair
-        {
-            uint64_pair_type data;
-        };
-         */
-
-        struct cmp_lt
-        {
-            bool operator () (const uint64_pair_type& a, const uint64_pair_type& b) const
-            {
-                return (a.second < b.second);
-            }
-
-            uint64_pair_type min_value() const
-            {
-                return stxxl::tuple<int64_t, int64_t> {-1,-1};
-            }
-        };
-
-        typedef stxxl::PRIORITY_QUEUE_GENERATOR<uint64_pair_type, cmp_lt, 128*1024*1024, 1024*1024>::result pqueue_type;
-
-        typedef pqueue_type::block_type block_type;
         const unsigned int mem_for_pools = 16 * 1024 * 1024;
-        stxxl::read_write_pool<block_type> pool((mem_for_pools / 2) / block_type::raw_size,
-                                                (mem_for_pools / 2) / block_type::raw_size);
+        stxxl::read_write_pool<pqueue_type::block_type>
+                pool((mem_for_pools / 2) / pqueue_type::block_type::raw_size,
+                     (mem_for_pools / 2) / pqueue_type::block_type::raw_size);
+
         pqueue_type PQ(pool);
 
-        //uint64_t iNodeCode = a_file.GetNodeIndex(10065269349);
-        //Node_t nodeExample = m_nodeVec->at(iNodeCode);
-
-        //nodeVec_t::const_iterator it;
+        /*
         auto it = m_nodeVec->begin();
 
         while (it != m_nodeVec->end())
         {
-            Node_t currNode = *it;
-            uiNodeIndex= currNode.index;
+            uiNodeIndex= (*it).index;
 
             if (uiNodeIndex != uiStartIndex)
             {
-                vecDistance[uiNodeIndex] = INT64_MAX/2; //!!!!!!!!!!!!!!!!!!!
+                //add placeholder "inf"
+                vecDistance[uiNodeIndex] = INT64_MAX * .6;
             }
             else
             {
                 vecDistance[uiNodeIndex] = 0;
             }
-
+            // add placeholder "NULL"
             vecPreviousNode[uiNodeIndex] = -1;
 
-            PQ.push(uint64_pair_type(uiNodeIndex, vecDistance[uiNodeIndex]));
+            PQ.push(int64tuple_t(uiNodeIndex, vecDistance[uiNodeIndex]));
 
             it++;
         }
+        */
+
+        i64Vec_t::bufwriter_type distWriter(vecDistance);
+        i64Vec_t::bufwriter_type prevWriter(vecPreviousNode);
+        booleanVec_t::bufwriter_type visitWriter(vecVisited);
+
+        for (uint64_t i = 0; i < m_nodeVec->size(); i++)
+        {
+            distWriter << INT64_MAX * .6;
+            prevWriter << -1LL;
+            visitWriter << false;
+            PQ.push(int64tuple_t(i, INT64_MAX * .6)); // !!!!!!!!
+        }
+        vecDistance[uiStartIndex] = 0;
+        PQ.push(int64tuple_t(uiStartIndex, 0)); // !!!!!!!!!!!
+
         LOG(INFO) << "Filled PQ!";
 
         //std::vector<uint64_t> vecNeighbours;
@@ -164,12 +116,12 @@ namespace Core
 
         while(PQ.size() != 0)
         {
-            uint64_pair_type pairNodeDist = PQ.top();
+            int64tuple_t pairNodeDist = PQ.top();
             PQ.pop();
 
             // keep track of visited nodes, as to not unnecessarily visit old elements (see further down)
 
-            if (vecVisited[pairNodeDist.first] == false)
+            if (!vecVisited[pairNodeDist.first])
             {
                 vecVisited[pairNodeDist.first] = true;
             }
@@ -178,14 +130,7 @@ namespace Core
                 continue;
             }
 
-            try
-            {
-                vecNeighbours = m_mapEdges[pairNodeDist.first]; // lookup needed?
-            }
-            catch(std::out_of_range)
-            {
-                continue;
-            }
+           vecNeighbours = m_mapEdges[pairNodeDist.first]; // lookup needed?}
 
             //for (uint64_t iEndNode : vecNeighbours)
             for (Edge_t e : vecNeighbours)
@@ -200,13 +145,12 @@ namespace Core
                     vecDistance[uiEdgeEndNodeIndex] = iAltDistance;
                     vecPreviousNode[uiEdgeEndNodeIndex] = pairNodeDist.first;
 
-                     //std::priority_queue does not implement a decrease-key type function.
-                     // old element remains as dead weight.
+                     //stxxl pqueue does not implement a decrease-key type function
+                     // old element remains as dead weight
 
-                    PQ.push(uint64_pair_type(uiEdgeEndNodeIndex, iAltDistance));
+                    PQ.push(int64tuple_t(uiEdgeEndNodeIndex, iAltDistance));
                     LOG(INFO) << "Update PQ!";
                 }
-
             }
         }
 
