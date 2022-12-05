@@ -403,7 +403,7 @@ namespace Core
         return &_edgeVector;
     }
 
-    void o5mFile::SortEdgesAscending()
+    void o5mFile::SortEdgesStartAscending()
     {
         LOG(INFO) << "Sort edges ascending ... (this can take up to 40 seconds in debug)";
         std::cout << "\n";
@@ -411,6 +411,13 @@ namespace Core
         std::sort(_edgeVector.begin(), _edgeVector.end(),
                   [](const Edge_t& a, const Edge_t& b)
                   {return a.startNode < b.startNode;});
+    }
+
+    void o5mFile::SortEdgesEndAscending()
+    {
+        std::sort(_edgeVector.begin(), _edgeVector.end(),
+                  [](const Edge_t& a, const Edge_t& b)
+                  {return a.endNode < b.endNode;});
     }
 
     void o5mFile::DisplayStatistics()

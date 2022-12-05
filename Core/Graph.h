@@ -19,13 +19,6 @@
 namespace Core
 {
 
-    struct edgeSet
-    {
-        edgeSet(std::vector<Way_t*> a_vecEdges){edges = a_vecEdges;};
-        std::vector<Way_t*> edges;
-    };
-
-
     struct compare_gt
     {
         bool operator () (const uint64_t & a, const uint64_t & b) const
@@ -36,7 +29,6 @@ namespace Core
 
     typedef stxxl::map<uint64_t, Node_t*, compare_gt, 4096, 4096> mapIntNodePointer;
     typedef stxxl::map<uint64_t, uint64_t, compare_gt, 4096, 4096> mapInt64Int64;
-    typedef stxxl::map<int, edgeSet*, compare_gt, 4096, 4096> mapIntEdgeSet;
 
     class graph
     {

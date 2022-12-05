@@ -3,63 +3,75 @@
 #include "o5mFile.hpp"
 #include "Graph.h"
 
-/*
-int32_t TestGraph(const std::string& a_strInfile)
+void FindNodesRank2(Core::o5mFile &a_file)
 {
-    std::string strLine, strTok;
-    std::ifstream in;
-    in.open(a_strInfile);
+    struct tmp{
+        uint64_t predOsmID;
+        uint64_t sucOsmID;
+    };
+    std::map<uint64_t, tmp> mapping;
 
-    std::vector<Core::node*> vecNodes;
-    std::vector<Core::EdgeComponents> vecEdges;
+    LOG(INFO) << "sort by start-node";
 
-    std::vector<std::string> vecLineContents;
+    a_file.SortEdgesStartAscending();
+    const Core::edgeVec_t *edgeVec = a_file.GetEdgeVectorConst();
 
-    std::unordered_map<std::string, int32_t> mapStringCodes;
+    auto it = edgeVec->begin();
 
-    if (!in)
-        return -1;
-
-    while (std::getline(in, strLine))
+    while (it != edgeVec->end())
     {
-        std::istringstream ssLine(strLine);
-
-        while (std::getline(ssLine, strTok, ','))
+        if(it + 1 != edgeVec->end())
         {
-            vecLineContents.push_back(strTok);
+            if(it->startNode != (it + 1)->startNode)
+            {
+                mapping.insert(std::make_pair(it->startNode, tmp{0, it->endNode}));
+            }
+        }
+        it++;
+    }
+
+    LOG(INFO) << "sort by end-node";
+
+    a_file.SortEdgesEndAscending();
+
+    it = edgeVec->begin();
+
+    while (it != edgeVec->end())
+    {
+        if(it + 1 != edgeVec->end())
+        {
+            if(it->endNode != (it + 1)->endNode)
+            {
+                if(mapping.find(it->endNode) != mapping.end())
+                {
+                    mapping[it->endNode].predOsmID = it->startNode;
+                }
+            }
+        }
+        it++;
+    }
+
+    // edgeVec.size() == 22.273.441
+    auto s = mapping.size(); //16.888.215
+
+    auto it_map = mapping.begin();
+    while(it_map != mapping.end())
+    {
+        if (it_map->second.predOsmID == 0 || it_map->second.sucOsmID == 0)
+        {
+            it_map = mapping.erase(it_map);
+        }
+        else
+        {
+            it_map++;
         }
     }
+    auto t = mapping.size(); // 16.810.089
 
-    for (uint32_t i = 0; i < vecLineContents.size(); i+=3)
-    {
-        int32_t iCodeA = std::hash<std::string>()(vecLineContents[i]);
-        int32_t iCodeB = std::hash<std::string>()(vecLineContents[i + 1]);
-        mapStringCodes[vecLineContents[i]] = iCodeA;
-        mapStringCodes[vecLineContents[i + 1]] = iCodeB;
+    LOG(INFO) << s;
+    LOG(INFO) << t;
 
-        Core::node* a = new Core::node(iCodeA);
-        Core::node* b = new Core::node(iCodeB);
-
-        vecNodes.push_back(a);
-        vecNodes.push_back(b);
-
-        vecEdges.emplace_back(std::make_tuple(std::atoi(vecLineContents[i + 2].c_str()), iCodeA, iCodeB));
-    }
-
-    Core::graph* g = new Core::graph(vecNodes, vecEdges);
-    g->SetStringHashes(mapStringCodes);
-    auto vec1 = g->DijkstraShortestPath("x", "y");
-    auto vec2 = g->a_starShortestPath("x", "y");
-    auto vec3 = g->BellmanFordShortestPath("x", "y");
-    g->PrintNodes(vec1);
-    LOG(INFO) << "-----------";
-    g->PrintNodes(vec2);
-    LOG(INFO) << "-----------";
-    g->PrintNodes(vec3);
-
-    return 0;
 }
-*/
 
 int32_t main()
 {
@@ -84,6 +96,10 @@ int32_t main()
     duesseldorfStreets.ReadIn("../Res/regbez-duesseldorf-streets-clean0.o5m");
     duesseldorfStreets.DisplayStatistics();
 
+    //FindNodesRank2(duesseldorfStreets);
+
+
+
     //--- Nodes
     //duesseldorfStreets.DisplayAllNodes();
     duesseldorfStreets.DisplayFirstThreeNodes();
@@ -101,7 +117,7 @@ int32_t main()
     duesseldorfStreets.DisplayLastThreeEdges();
 
     // --- Sort edges
-    duesseldorfStreets.SortEdgesAscending();
+    duesseldorfStreets.SortEdgesStartAscending();
     duesseldorfStreets.DisplayFirstThreeEdges();
     duesseldorfStreets.DisplayLastThreeEdges();
 

@@ -52,8 +52,9 @@ namespace Core
             stringPairTable_t* GetStringPairTable();
             wayVec_t*          GetWayVector();
             edgeVec_t*         GetEdgeVector();
-            const edgeVec_t*    GetEdgeVectorConst();
-            void               SortEdgesAscending();
+            const edgeVec_t*   GetEdgeVectorConst();
+            void               SortEdgesStartAscending();
+            void               SortEdgesEndAscending();
 
             //--- Displaying
             void DisplayStatistics();
