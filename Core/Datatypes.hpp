@@ -4,7 +4,8 @@
 
 namespace Core
 {
-    #define STRING_TABLE_SIZE 20000
+    #define STRING_TABLE_SIZE   20000
+    #define MAX_AMOUNT_OF_EDGES 32
 
     struct __attribute__((__packed__)) Node_t
     {
@@ -13,6 +14,22 @@ namespace Core
         double   lat;
         double   lon;
         uint32_t stringTableIndex;
+        uint8_t inEdgesIndex;
+        uint8_t outEdgesIndex;
+        std::array<uint64_t, MAX_AMOUNT_OF_EDGES> inEdges;
+        std::array<uint64_t, MAX_AMOUNT_OF_EDGES> outEdges;
+        std::array<uint64_t, MAX_AMOUNT_OF_EDGES> outEdgesWeight; //Cost to reach the node located at the corresponding index
+
+        Node_t() = default;
+        Node_t(uint64_t p_index, uint64_t p_osmID, double p_lat, double p_lon, uint32_t p_stringTableIndex)
+            : index(p_index), osmID(p_osmID), lat(p_lat), lon(p_lon), stringTableIndex(p_stringTableIndex)
+        {
+            inEdgesIndex   = 0;
+            outEdgesIndex  = 0;
+            inEdges        = {0};
+            outEdges       = {0};
+            outEdgesWeight = {0};
+        }
     };
 
     struct Way_t

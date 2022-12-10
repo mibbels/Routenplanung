@@ -28,17 +28,20 @@ namespace Core
 
             //--- Internal data processing
             void ResetDeltaCounters();
+            void PushEdgeInNodes(const Edge_t& edge);
             void ProcessNode(const std::vector<uint8_t>& nodeData, uint64_t dataLength);
             void ProcessWay (const std::vector<uint8_t>& wayData,  uint64_t dataLength);
 
             //--- Internal displaying
             void DisplayNode(const Node_t& node);
-            void DisplayWay (const Way_t& way);
+            void DisplayWay (const Way_t&  way);
             void DisplayEdge(const Edge_t& edge);
 
             //--- Internal Thread stuff
-            inline static std::atomic<bool>   _runThread    = std::atomic<bool>();
-            inline static std::atomic<double> _fileProgress = std::atomic<double>();
+            inline static std::atomic<bool>     _runThread    = std::atomic<bool>();
+            inline static std::atomic<double>   _fileProgress = std::atomic<double>();
+            inline static std::atomic<uint64_t> _nodeProgress = std::atomic<uint64_t>();
+            inline static std::atomic<uint64_t> _wayProgress  = std::atomic<uint64_t>();
             static void ProgressThread();
 
         public:

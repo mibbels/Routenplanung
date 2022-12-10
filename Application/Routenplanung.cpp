@@ -79,11 +79,11 @@ int32_t main()
     // --- stxxl config -> taken from: https://stxxl.org/tags/1.4.1/install_config.html
 #ifdef _WIN32
     stxxl::config * cfg = stxxl::config::get_instance();
-    stxxl::disk_config disk_win("disk=C:\\Users\\maxib\\stxxl.tmp, 4 GiB, wincall delete");
+    stxxl::disk_config disk_win("disk=C:\\Users\\maxib\\stxxl.tmp, 20 GiB, wincall delete");
     cfg->add_disk(disk_win);
 #elif __linux__
     stxxl::config * cfg = stxxl::config::get_instance();
-    stxxl::disk_config disk1("disk=/tmp/stxxl.tmp, 4 GiB, syscall unlink");
+    stxxl::disk_config disk1("disk=/tmp/stxxl.tmp, 20 GiB, syscall unlink");
     disk1.direct = stxxl::disk_config::DIRECT_ON;
     cfg->add_disk(disk1);
 #endif
@@ -98,8 +98,6 @@ int32_t main()
 
     //FindNodesRank2(duesseldorfStreets);
 
-
-
     //--- Nodes
     //duesseldorfStreets.DisplayAllNodes();
     duesseldorfStreets.DisplayFirstThreeNodes();
@@ -108,18 +106,18 @@ int32_t main()
 
     //--- Ways
     //duesseldorfStreets.DisplayAllWays();
-    duesseldorfStreets.DisplayFirstThreeWays();
-    duesseldorfStreets.DisplayLastThreeWays();
+    //duesseldorfStreets.DisplayFirstThreeWays();
+    //duesseldorfStreets.DisplayLastThreeWays();
 
     //--- Edges
     //duesseldorfStreets.DisplayAllEdges();
-    duesseldorfStreets.DisplayFirstThreeEdges();
-    duesseldorfStreets.DisplayLastThreeEdges();
+    //duesseldorfStreets.DisplayFirstThreeEdges();
+    //duesseldorfStreets.DisplayLastThreeEdges();
 
     // --- Sort edges
-    duesseldorfStreets.SortEdgesStartAscending();
-    duesseldorfStreets.DisplayFirstThreeEdges();
-    duesseldorfStreets.DisplayLastThreeEdges();
+    //duesseldorfStreets.SortEdgesStartAscending();
+    //duesseldorfStreets.DisplayFirstThreeEdges();
+    //duesseldorfStreets.DisplayLastThreeEdges();
 
     //--- Association example
     //auto index   = duesseldorfStreets.GetNodeIndex(160223); //First node
@@ -132,9 +130,9 @@ int32_t main()
 
     //TestGraph("../Res/graph.txt");
 
-    Core::graph g;
-    g.create(duesseldorfStreets);
-    g.DijkstraShortestPath(143598317, 143598305, duesseldorfStreets);
+    //Core::graph g;
+    //g.create(duesseldorfStreets);
+    //g.DijkstraShortestPath(143598317, 143598305, duesseldorfStreets);
 
     return 0;
 }

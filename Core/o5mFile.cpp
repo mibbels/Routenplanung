@@ -9,6 +9,42 @@ namespace Core
         _refNodeDeltaCounter = 0;
     }
 
+    void o5mFile::PushEdgeInNodes(const Edge_t& edge)
+    {
+        //Get start and end node + weight
+        uint64_t startNode = edge.startNode;
+        uint64_t endNode   = edge.endNode;
+        uint64_t weight    = edge.weight;
+
+        //Get the indices of both nodes in the vector
+        uint64_t startNodeIndex = GetNodeIndex(startNode);
+        uint64_t endNodeIndex   = GetNodeIndex(endNode);
+
+        ///////////////////////////////////////
+        //// StartNode -> EndNode          ////
+        //// StartNode := outEdge + weight ////
+        //// EndNode   := inEdge           ////
+        ///////////////////////////////////////
+
+        //Get the indices of the corresponding in and out arrays
+        uint8_t outEdgeIndex = _nodeVector.at(startNodeIndex).outEdgesIndex;
+        uint8_t inEdgeIndex  = _nodeVector.at(endNodeIndex).inEdgesIndex;
+
+        if(outEdgeIndex < MAX_AMOUNT_OF_EDGES && inEdgeIndex < MAX_AMOUNT_OF_EDGES)
+        {
+            //Set outEdge and weight in the startNode
+            _nodeVector.at(startNodeIndex).outEdges.at(outEdgeIndex)       = endNode;
+            _nodeVector.at(startNodeIndex).outEdgesWeight.at(outEdgeIndex) = weight;
+
+            //Set inEdge in the endNode
+            _nodeVector.at(endNodeIndex).inEdges.at(inEdgeIndex) = startNode;
+
+            //Increment both indices
+            _nodeVector.at(startNodeIndex).outEdgesIndex++;
+            _nodeVector.at(endNodeIndex).inEdgesIndex++;
+        }
+    }
+
     void o5mFile::ProcessNode(const std::vector<uint8_t>& nodeData, uint64_t dataLength)
     {
         static double currentLat = 0.0;
@@ -139,6 +175,7 @@ namespace Core
                 {
                     Edge_t edge{startEdge, _refNodeDeltaCounter, lengthOfRefSection};
                     _edgeVector.push_back(edge);
+                    PushEdgeInNodes(edge);
 
                     //Set new starting edge
                     startEdge = _refNodeDeltaCounter;
@@ -164,6 +201,9 @@ namespace Core
     {
         printf("osmID: %11lu | lat: %2.7f | lon: %2.7f | NodeIndex: %8lu \n", node.osmID, node.lat, node.lon, node.index);
 
+        printf("1. InEdge: %11lu | 1. OutEdge: %11lu | Weight: %3lu\n",
+               node.inEdges.at(0), node.outEdges.at(0), node.outEdgesWeight.at(0));
+
         if(node.stringTableIndex != 0)
         {
             printf("\t\t\t k=\"%s\", v=\"%s\"\n",
@@ -187,7 +227,7 @@ namespace Core
         while(_runThread)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            Utility::Display_ProgressBar(_fileProgress);
+            Utility::Display_ProgressBar(_fileProgress, _nodeProgress, _wayProgress);
         }
 
         std::cout << "\n";
@@ -291,6 +331,7 @@ namespace Core
                         {
                             //Process node (create and save it)
                             ProcessNode(rawNodes, lengthOfData);
+                            _nodeProgress = _nodeVector.size();
                         }
 
                         //Clear raw data vector
@@ -300,7 +341,6 @@ namespace Core
 
                 //Process way
                 else if(currentByte[0] == 17 && _wayVector.size() < 3137873)
-                //else if(currentByte[0] == 17 && _wayVector.size() < 90000)
                 {
                     processWays = true;
 
@@ -339,6 +379,7 @@ namespace Core
                         {
                             //Process way (save some stats about the way and extract all the edges)
                             ProcessWay(rawWays, lengthOfData);
+                            _wayProgress = _wayVector.size();
                         }
 
                         //Clear raw data vector

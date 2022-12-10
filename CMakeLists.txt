@@ -8,8 +8,8 @@ project(Routenplanung)
 
 ############################### Settings ####################################
 
-set(CMAKE_BUILD_TYPE "Debug")
-set(COMPILE_FLAGS "-Wall -Wextra -Wpedantic -Wno-unused-parameter --std=c++17 -g")
+set(CMAKE_BUILD_TYPE "Release")
+set(COMPILE_FLAGS "-Wall -Wextra -Wpedantic -Wno-unused-parameter --std=c++17 -O3")
 set(CORE_LINKER_FLAGS "")
 set(APP_LINKER_FLAGS "")
 
