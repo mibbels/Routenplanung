@@ -91,6 +91,8 @@ int32_t main()
     Core::Logger::Init();
     LOG(INFO) << "#############\t Routenplanung \t\t#############";
 
+    auto hashval = Core::Utility::geohash(48.99885, 27.53426, 9);
+
     //--- General
     Core::o5mFile duesseldorfStreets;
     duesseldorfStreets.ReadIn("../Res/regbez-duesseldorf-streets-clean0.o5m");
