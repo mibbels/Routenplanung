@@ -5,6 +5,7 @@
 #include <chrono>
 #include <map>
 #include <algorithm>
+#include <mutex>
 
 #include "Datatypes.hpp"
 #include "Logger.hpp"
@@ -26,9 +27,11 @@ namespace Core
             uint64_t          _wayDeltaCounter     = 0;     //Delta encoding number for the way id
             uint64_t          _refNodeDeltaCounter = 0;     //Delta encoding number for the referenced nodes in the ways
 
+            static constexpr uint64_t _NUMBER_OF_THREADS = 16; //Amount of threads to put edges in nodes
+
             //--- Internal data processing
             void ResetDeltaCounters();
-            void PushEdgeInNodes(const Edge_t& edge);
+            void PushEdgeInNodes(uint64_t edgeIndex);
             void ProcessNode(const std::vector<uint8_t>& nodeData, uint64_t dataLength);
             void ProcessWay (const std::vector<uint8_t>& wayData,  uint64_t dataLength);
 
@@ -38,11 +41,13 @@ namespace Core
             void DisplayEdge(const Edge_t& edge);
 
             //--- Internal Thread stuff
-            inline static std::atomic<bool>     _runThread    = std::atomic<bool>();
-            inline static std::atomic<double>   _fileProgress = std::atomic<double>();
-            inline static std::atomic<uint64_t> _nodeProgress = std::atomic<uint64_t>();
-            inline static std::atomic<uint64_t> _wayProgress  = std::atomic<uint64_t>();
-            static void ProgressThread();
+            inline static std::atomic<bool>     _runThread      = std::atomic<bool>();
+            inline static std::atomic<double>   _globalProgress = std::atomic<double>();
+            inline static std::atomic<uint64_t> _localProgress  = std::atomic<uint64_t>();
+            std::mutex nodeVectorMutex;
+
+            static void DisplayProgressThread();
+                   void PushEdgesInNodesThread(uint64_t threadCount, uint64_t chunkSize);
 
         public:
             o5mFile();
@@ -58,6 +63,7 @@ namespace Core
             const edgeVec_t*   GetEdgeVectorConst();
             void               SortEdgesStartAscending();
             void               SortEdgesEndAscending();
+            void               PushEdgesInNodes();
 
             //--- Displaying
             void DisplayStatistics();

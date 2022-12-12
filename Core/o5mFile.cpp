@@ -9,8 +9,11 @@ namespace Core
         _refNodeDeltaCounter = 0;
     }
 
-    void o5mFile::PushEdgeInNodes(const Edge_t& edge)
+    void o5mFile::PushEdgeInNodes(uint64_t edgeIndex)
     {
+        //Get edge
+        Edge_t edge = _edgeVector.at(edgeIndex);
+
         //Get start and end node + weight
         uint64_t startNode = edge.startNode;
         uint64_t endNode   = edge.endNode;
@@ -26,22 +29,26 @@ namespace Core
         //// EndNode   := inEdge           ////
         ///////////////////////////////////////
 
-        //Get the indices of the corresponding in and out arrays
-        uint8_t outEdgeIndex = _nodeVector.at(startNodeIndex).outEdgesIndex;
-        uint8_t inEdgeIndex  = _nodeVector.at(endNodeIndex).inEdgesIndex;
-
-        if(outEdgeIndex < MAX_AMOUNT_OF_EDGES && inEdgeIndex < MAX_AMOUNT_OF_EDGES)
         {
-            //Set outEdge and weight in the startNode
-            _nodeVector.at(startNodeIndex).outEdges.at(outEdgeIndex)       = endNode;
-            _nodeVector.at(startNodeIndex).outEdgesWeight.at(outEdgeIndex) = weight;
+            std::unique_lock<std::mutex> lock(nodeVectorMutex);
 
-            //Set inEdge in the endNode
-            _nodeVector.at(endNodeIndex).inEdges.at(inEdgeIndex) = startNode;
+            //Get the indices of the corresponding in and out arrays
+            const uint8_t outEdgeIndex = _nodeVector.at(startNodeIndex).outEdgesIndex;
+            const uint8_t inEdgeIndex  = _nodeVector.at(endNodeIndex).inEdgesIndex;
 
-            //Increment both indices
-            _nodeVector.at(startNodeIndex).outEdgesIndex++;
-            _nodeVector.at(endNodeIndex).inEdgesIndex++;
+            if(outEdgeIndex < MAX_AMOUNT_OF_EDGES && inEdgeIndex < MAX_AMOUNT_OF_EDGES)
+            {
+                //Set outEdge and weight in the startNode
+                _nodeVector.at(startNodeIndex).outEdges.at(outEdgeIndex)       = endNode;
+                _nodeVector.at(startNodeIndex).outEdgesWeight.at(outEdgeIndex) = weight;
+
+                //Set inEdge in the endNode
+                _nodeVector.at(endNodeIndex).inEdges.at(inEdgeIndex) = startNode;
+
+                //Increment both indices
+                _nodeVector.at(startNodeIndex).outEdgesIndex++;
+                _nodeVector.at(endNodeIndex).inEdgesIndex++;
+            }
         }
     }
 
@@ -175,7 +182,6 @@ namespace Core
                 {
                     Edge_t edge{startEdge, _refNodeDeltaCounter, lengthOfRefSection};
                     _edgeVector.push_back(edge);
-                    PushEdgeInNodes(edge);
 
                     //Set new starting edge
                     startEdge = _refNodeDeltaCounter;
@@ -222,16 +228,28 @@ namespace Core
         printf("StartNode: %11lu | EndNode: %11lu | Weight: %3lu \n", edge.startNode, edge.endNode, edge.weight);
     }
 
-    void o5mFile::ProgressThread()
+    void o5mFile::DisplayProgressThread()
     {
         while(_runThread)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            Utility::Display_ProgressBar(_fileProgress, _nodeProgress, _wayProgress);
+            Utility::Display_ProgressBar(_globalProgress);
         }
 
         std::cout << "\n";
         fflush(stdout);
+    }
+
+    void o5mFile::PushEdgesInNodesThread(uint64_t threadCount, uint64_t chunkSize)
+    {
+        uint64_t startIndex = threadCount * chunkSize;
+
+        for(uint64_t i = startIndex; i < startIndex + chunkSize; i++)
+        {
+            PushEdgeInNodes(i);
+            _localProgress++;
+            _globalProgress = (double)_localProgress/(double)_edgeVector.size();
+        }
     }
 
     o5mFile::o5mFile()
@@ -279,7 +297,7 @@ namespace Core
             //Start second thread to display progress
             LOG(INFO) << "Start processing ...";
             _runThread = true;
-            std::thread t1(ProgressThread);
+            std::thread t1(DisplayProgressThread);
 
             //Read data byte by byte
             for(uint64_t fileIndex = 0; fileIndex < fileSize; fileIndex++)
@@ -331,7 +349,6 @@ namespace Core
                         {
                             //Process node (create and save it)
                             ProcessNode(rawNodes, lengthOfData);
-                            _nodeProgress = _nodeVector.size();
                         }
 
                         //Clear raw data vector
@@ -340,7 +357,7 @@ namespace Core
                 }
 
                 //Process way
-                else if(currentByte[0] == 17 && _wayVector.size() < 3137873)
+                else if(currentByte[0] == 17 && _wayVector.size() < 1000) //3137873
                 {
                     processWays = true;
 
@@ -379,7 +396,6 @@ namespace Core
                         {
                             //Process way (save some stats about the way and extract all the edges)
                             ProcessWay(rawWays, lengthOfData);
-                            _wayProgress = _wayVector.size();
                         }
 
                         //Clear raw data vector
@@ -394,7 +410,7 @@ namespace Core
                 }
 
                 //Update file progress
-                _fileProgress = (double)fileIndex/(double)fileSize;
+                _globalProgress = (double)fileIndex/(double)fileSize;
             }
 
             //Join thread
@@ -446,7 +462,7 @@ namespace Core
 
     void o5mFile::SortEdgesStartAscending()
     {
-        LOG(INFO) << "Sort edges ascending ... (this can take up to 40 seconds in debug)";
+        LOG(INFO) << "Sort start edges ascending ... (this can take up to 40 seconds in debug)";
         std::cout << "\n";
 
         std::sort(_edgeVector.begin(), _edgeVector.end(),
@@ -456,9 +472,49 @@ namespace Core
 
     void o5mFile::SortEdgesEndAscending()
     {
+        LOG(INFO) << "Sort end edges ascending ... (this can take up to 40 seconds in debug)";
+        std::cout << "\n";
+
         std::sort(_edgeVector.begin(), _edgeVector.end(),
                   [](const Edge_t& a, const Edge_t& b)
                   {return a.endNode < b.endNode;});
+    }
+
+    void o5mFile::PushEdgesInNodes()
+    {
+        LOG(INFO) << "Start data transforming ...";
+
+        //Create chunks
+        uint64_t chunkSize = _edgeVector.size() / _NUMBER_OF_THREADS;
+
+        //Init progress variables and create displaying thread
+        _globalProgress = 0;
+        _localProgress  = 0;
+        _runThread      = true;
+        std::thread t1(DisplayProgressThread);
+
+        //Storage
+        std::thread threads[_NUMBER_OF_THREADS];
+
+        LOG(INFO) << "Create " << _NUMBER_OF_THREADS << " threads ...";
+
+        //Create threads
+        for(uint64_t i = 0; i < _NUMBER_OF_THREADS; i++)
+        {
+            threads[i] = std::thread(&o5mFile::PushEdgesInNodesThread, this, i, chunkSize);
+        }
+
+        //Wait for threads to finish
+        for(auto& thread : threads)
+        {
+            thread.join();
+        }
+
+        _runThread = false;
+        t1.join();
+
+        LOG(INFO) << "Joined all threads!";
+        std::cout << "\n";
     }
 
     void o5mFile::DisplayStatistics()
@@ -601,7 +657,7 @@ namespace Core
             }
         }
 
-        std::cout << "\n";;
+        std::cout << "\n";
     }
 
     void o5mFile::DisplayLastThreeStringTableEntries()

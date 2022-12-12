@@ -2,10 +2,8 @@
 
 namespace Core
 {
-    //#define PBSTR   "############################################################"
-    #define PBSTR   "##############################"
-    //#define PBWIDTH 60
-    #define PBWIDTH 30
+    #define PBSTR   "############################################################"
+    #define PBWIDTH 60
 
     uint64_t Utility::GetLengthOfValue(const std::vector<uint8_t>& data, uint64_t currentIndex)
     {
@@ -64,12 +62,12 @@ namespace Core
         }
     }
 
-    void Utility::Display_ProgressBar(double percentage, uint64_t firstValue, uint64_t secondValue)
+    void Utility::Display_ProgressBar(double percentage)
     {
         auto val  = (int32_t)(percentage * 100);
         auto lpad = (int32_t)(percentage * PBWIDTH);
         auto rpad = PBWIDTH - lpad;
-        printf("\r%3d%%  [ %.*s%*s] | Nodes: [%8lu/17567130] | Ways: [%7lu/3137873] ", val, lpad, PBSTR, rpad, "", firstValue, secondValue);
+        printf("\r%3d%%  [ %.*s%*s]", val, lpad, PBSTR, rpad, "");
         fflush(stdout);
     }
 

@@ -17,7 +17,7 @@ namespace Core
 
             //--- Data visualization
             static void    Display_ui8Vec(const std::vector<uint8_t>& vector, uint8_t numberOfBytes);
-            static void    Display_ProgressBar(double percentage, uint64_t firstValue, uint64_t secondValue);
+            static void    Display_ProgressBar(double percentage);
 
             //--- Data encoding and decoding
             static std::vector<uint8_t> DeltaEncode_uInt32(uint32_t value);
@@ -29,10 +29,11 @@ namespace Core
             static double               DeltaDecode_Float (const uint8_t* rawData);
             static stringPair_t         Decode_StringPair (const uint8_t* rawData);
 
-            static uint64_t                geohash(double _lat, double _long, int precision);
-            static std::pair<double, double>    geohash_decode(uint64_t val, int precision);
-            static std::string             geohash_tostring(uint64_t val, int precision);
-            static uint64_t                geohash_fromstring(std::string hashval, int precision);
+            //--- Geo hashing
+            static uint64_t                  geohash(double _lat, double _long, int precision);
+            static std::pair<double, double> geohash_decode(uint64_t val, int precision);
+            static std::string               geohash_tostring(uint64_t val, int precision);
+            static uint64_t                  geohash_fromstring(std::string hashval, int precision);
 
     };
 }

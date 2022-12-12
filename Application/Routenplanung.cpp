@@ -3,7 +3,7 @@
 #include "o5mFile.hpp"
 #include "Graph.h"
 
-void FindNodesRank2(Core::o5mFile &a_file)
+void FindNodesOfRankTwo(Core::o5mFile &a_file)
 {
     struct tmp{
         uint64_t predOsmID;
@@ -91,16 +91,17 @@ int32_t main()
     Core::Logger::Init();
     LOG(INFO) << "#############\t Routenplanung \t\t#############";
 
-    auto hashval = Core::Utility::geohash(48.99885, 27.53426, 3);
-    auto strval = Core::Utility::geohash_tostring(hashval, 3);
-    auto decoded = Core::Utility::geohash_decode(hashval, 3);
+    //auto hashval = Core::Utility::geohash(48.99885, 27.53426, 3);
+    //auto strval  = Core::Utility::geohash_tostring(hashval, 3);
+    //auto decoded = Core::Utility::geohash_decode(hashval, 3);
 
     //--- General
     Core::o5mFile duesseldorfStreets;
     duesseldorfStreets.ReadIn("../Res/regbez-duesseldorf-streets-clean0.o5m");
     duesseldorfStreets.DisplayStatistics();
 
-    //FindNodesRank2(duesseldorfStreets);
+    //duesseldorfStreets.SortEdgesStartAscending();
+    duesseldorfStreets.PushEdgesInNodes();
 
     //--- Nodes
     //duesseldorfStreets.DisplayAllNodes();
@@ -108,29 +109,7 @@ int32_t main()
     duesseldorfStreets.DisplayLastThreeNodes();
     duesseldorfStreets.DisplayLastThreeStringTableEntries();
 
-    //--- Ways
-    //duesseldorfStreets.DisplayAllWays();
-    //duesseldorfStreets.DisplayFirstThreeWays();
-    //duesseldorfStreets.DisplayLastThreeWays();
-
-    //--- Edges
-    //duesseldorfStreets.DisplayAllEdges();
-    //duesseldorfStreets.DisplayFirstThreeEdges();
-    //duesseldorfStreets.DisplayLastThreeEdges();
-
-    // --- Sort edges
-    //duesseldorfStreets.SortEdgesStartAscending();
-    //duesseldorfStreets.DisplayFirstThreeEdges();
-    //duesseldorfStreets.DisplayLastThreeEdges();
-
-    //--- Association example
-    //auto index   = duesseldorfStreets.GetNodeIndex(160223); //First node
-    //auto nodeVec = duesseldorfStreets.GetNodeVector();
-    //auto nodeAt  = nodeVec->at(index);
-
-    //auto index2   = duesseldorfStreets.GetNodeIndex(10065269349); //Last node
-    //auto nodeVec2 = duesseldorfStreets.GetNodeVector();
-    //auto nodeAt2  = nodeVec2->at(index2);
+    //FindNodesOfRankTwo(duesseldorfStreets);
 
     //TestGraph("../Res/graph.txt");
 
