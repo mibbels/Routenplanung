@@ -317,7 +317,7 @@ namespace Core
 
 
         bool even = true;
-        uint64_t result = 0b0;
+        uint64_t result = 0ULL;
 
         double latMin = -90.0,  latMax = 90.0;
         double longMin = -180.0, longMax = 180.0;
@@ -368,13 +368,13 @@ namespace Core
         double latMin = -90.0,  latMax = 90.0;
         double longMin = -180.0, longMax = 180.0;
         double mid;
-        bool curr_bit;
-        const char bitop = 0b01;
+        uint64_t curr_bit = 1ULL;
+        uint64_t bitop = 1ULL << (precision * 5 - 1);
 
         for(int i = 0; i < precision* 5; i++)
         {
             curr_bit = val & bitop;
-
+            curr_bit >>= precision * 5 - 1 - i;
             if(even)
             {
                 mid = (longMin + longMax) * 0.5;
@@ -402,7 +402,7 @@ namespace Core
                 _lat = (latMin + latMax) * 0.5;
             }
             even = !even;
-            val >>= 1;
+            bitop >>= 1;
         }
 
         return std::make_pair(_lat, _long);
