@@ -29,6 +29,10 @@ namespace Core
             static double               DeltaDecode_Float (const uint8_t* rawData);
             static stringPair_t         Decode_StringPair (const uint8_t* rawData);
 
-            static std::string           geohash(double _lat, double _long, int precision);
+            static uint64_t                geohash(double _lat, double _long, int precision);
+            static std::pair<double, double>    geohash_decode(uint64_t val, int precision);
+            static std::string             geohash_tostring(uint64_t val, int precision);
+            static uint64_t                geohash_fromstring(std::string hashval, int precision);
+
     };
 }

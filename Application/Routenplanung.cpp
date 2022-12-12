@@ -91,7 +91,9 @@ int32_t main()
     Core::Logger::Init();
     LOG(INFO) << "#############\t Routenplanung \t\t#############";
 
-    auto hashval = Core::Utility::geohash(48.99885, 27.53426, 9);
+    auto hashval = Core::Utility::geohash(48.99885, 27.53426, 3);
+    auto strval = Core::Utility::geohash_tostring(hashval, 3);
+    auto decoded = Core::Utility::geohash_decode(hashval, 3);
 
     //--- General
     Core::o5mFile duesseldorfStreets;

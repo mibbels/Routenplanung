@@ -305,7 +305,7 @@ namespace Core
         };
     }
 
-    std::string Utility::geohash(double _lat, double _long, int precision)
+    uint64_t Utility::geohash(double _lat, double _long, int precision)
     {
         /*
          * largely taken from: https://www.factual.com/blog/how-geohashes-work/
@@ -319,8 +319,7 @@ namespace Core
 
 
         bool even = true;
-        std::string hashval = "";
-        uint64_t result = 0;
+        uint64_t result = 0b0;
 
         double latMin = -90.0,  latMax = 90.0;
         double longMin = -180.0, longMax = 180.0;
@@ -361,19 +360,81 @@ namespace Core
             even = !even;
         }
 
+        return result;
+    }
 
+    std::pair<double, double> Utility::geohash_decode(uint64_t val, int precision)
+    {
+        bool even = true;
+        double _lat = 0.0, _long = 0.0;
+        double latMin = -90.0,  latMax = 90.0;
+        double longMin = -180.0, longMax = 180.0;
+        double mid;
+        bool curr_bit;
+        const char bitop = 0b01;
+
+        for(int i = 0; i < precision* 5; i++)
+        {
+            curr_bit = val & bitop;
+
+            if(even)
+            {
+                mid = (longMin + longMax) * 0.5;
+                if (curr_bit == 0)
+                {
+                    longMax = mid;
+                }
+                else
+                {
+                    longMin = mid;
+                }
+                _long = (longMin + longMax) * 0.5;
+            }
+            if (!even)
+            {
+                mid = (latMin + latMax) * 0.5;
+                if (curr_bit == 0)
+                {
+                    latMax = mid;
+                }
+                else
+                {
+                    latMin = mid;
+                }
+                _lat = (latMin + latMax) * 0.5;
+            }
+            even = !even;
+            val >>= 1;
+        }
+
+        return std::make_pair(_lat, _long);
+    }
+
+    std::string Utility::geohash_tostring(uint64_t val, int precision)
+    {
+        static char BASE32[32] =
+                { '0', '1', '2', '3', '4', '5', '6', '7',
+                  '8', '9', 'b', 'c', 'd', 'e', 'f', 'g',
+                  'h', 'j', 'k', 'm', 'n', 'p', 'q', 'r',
+                  's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
+
+        std::string hashval = "";
         const char bitop = 0b00011111;
         int idx;
         for (int i = 0; i < precision; i++)
         {
-            idx = result & bitop;
-            hashval.push_back(BASE32[idx]);
+            idx = val & bitop;
+            hashval = BASE32[idx] + hashval;
             for (int j = 0; j < 5; j++)
-                result >>= 1;
+                val >>= 1;
             //result >>= bitop;
 
         }
         return hashval;
     }
 
+    uint64_t Utility::geohash_fromstring(std::string hashval, int precision)
+    {
+
+    }
 }
