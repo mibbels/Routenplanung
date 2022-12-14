@@ -303,18 +303,15 @@ namespace Core
         };
     }
 
-    uint64_t Utility::geohash(double _lat, double _long, int precision)
+    uint64_t Utility::Geohash(double _lat, double _long, int precision)
     {
-        /*
-         * largely taken from: https://www.factual.com/blog/how-geohashes-work/
-         */
+        // --- largely taken from -> https://www.factual.com/blog/how-geohashes-work/
 
         static char BASE32[32] =
                 { '0', '1', '2', '3', '4', '5', '6', '7',
                   '8', '9', 'b', 'c', 'd', 'e', 'f', 'g',
                   'h', 'j', 'k', 'm', 'n', 'p', 'q', 'r',
                   's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
-
 
         bool even = true;
         uint64_t result = 0ULL;
@@ -361,7 +358,7 @@ namespace Core
         return result;
     }
 
-    std::pair<double, double> Utility::geohash_decode(uint64_t val, int precision)
+    std::pair<double, double> Utility::Geohash_Decode(uint64_t val, int precision)
     {
         bool even = true;
         double _lat = 0.0, _long = 0.0;
@@ -408,7 +405,7 @@ namespace Core
         return std::make_pair(_lat, _long);
     }
 
-    std::string Utility::geohash_tostring(uint64_t val, int precision)
+    std::string Utility::Geohash_ToString(uint64_t val, int precision)
     {
         static char BASE32[32] =
                 { '0', '1', '2', '3', '4', '5', '6', '7',
@@ -431,7 +428,7 @@ namespace Core
         return hashval;
     }
 
-    uint64_t Utility::geohash_fromstring(std::string hashval, int precision)
+    uint64_t Utility::Geohash_FromString(std::string hashval, int precision)
     {
 
     }

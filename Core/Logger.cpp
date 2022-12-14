@@ -10,7 +10,7 @@ namespace Core
         //Configure logger
         el::Configurations defaultConf;
         defaultConf.setToDefault();
-        defaultConf.setGlobally(el::ConfigurationType::Format, "%datetime{%m:%s} [%level]  %msg");
+        defaultConf.setGlobally(el::ConfigurationType::Format, "[%level] %datetime{%h:%m:%s} %msg");
         el::Loggers::reconfigureLogger("default", defaultConf);
     }
 }

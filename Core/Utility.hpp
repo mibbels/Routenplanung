@@ -30,10 +30,10 @@ namespace Core
             static stringPair_t         Decode_StringPair (const uint8_t* rawData);
 
             //--- Geo hashing
-            static uint64_t                  geohash(double _lat, double _long, int precision);
-            static std::pair<double, double> geohash_decode(uint64_t val, int precision);
-            static std::string               geohash_tostring(uint64_t val, int precision);
-            static uint64_t                  geohash_fromstring(std::string hashval, int precision);
+            static uint64_t                  Geohash(double _lat, double _long, int precision);
+            static std::pair<double, double> Geohash_Decode(uint64_t val, int precision);
+            static std::string               Geohash_ToString(uint64_t val, int precision);
+            static uint64_t                  Geohash_FromString(std::string hashval, int precision);
 
     };
 }
