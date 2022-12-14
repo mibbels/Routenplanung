@@ -4,11 +4,8 @@ namespace Core
 {
     // ====================================== PRIVATE ======================================
 
-    void o5mFile::ProcessEdge(uint64_t edgeIndex)
+    void o5mFile::ProcessEdge(const Edge_t& edge)
     {
-        //Get edge
-        Edge_t edge = _edgeVector.at(edgeIndex);
-
         //Get start and end node + weight
         uint64_t startNode = edge.startNode;
         uint64_t endNode   = edge.endNode;
@@ -24,46 +21,23 @@ namespace Core
         // EndNode   := inEdge           //
         // ==============================//
 
+        //Get the indices of the corresponding in and out arrays
+        const uint8_t outEdgeIndex = _nodeEdgeStorageVector.at(startNodeIndex).outEdgesIndex;
+        const uint8_t inEdgeIndex  = _nodeEdgeStorageVector.at(endNodeIndex).inEdgesIndex;
+
+        if(outEdgeIndex < MAX_AMOUNT_OF_EDGES && inEdgeIndex < MAX_AMOUNT_OF_EDGES)
         {
-            std::unique_lock<std::mutex> lock(_nodeVectorMutex);
+            //Set outEdge and weight in the startNode
+            _nodeEdgeStorageVector.at(startNodeIndex).outEdges.at(outEdgeIndex)       = endNode;
+            _nodeEdgeStorageVector.at(startNodeIndex).outEdgesWeight.at(outEdgeIndex) = weight;
 
-            //Get the indices of the corresponding in and out arrays
-            const uint8_t outEdgeIndex = _nodeVector.at(startNodeIndex).outEdgesIndex;
-            const uint8_t inEdgeIndex  = _nodeVector.at(endNodeIndex).inEdgesIndex;
+            //Set inEdge in the endNode
+            _nodeEdgeStorageVector.at(endNodeIndex).inEdges.at(inEdgeIndex) = startNode;
 
-            if(outEdgeIndex < MAX_AMOUNT_OF_EDGES && inEdgeIndex < MAX_AMOUNT_OF_EDGES)
-            {
-                //Set outEdge and weight in the startNode
-                _nodeVector.at(startNodeIndex).outEdges.at(outEdgeIndex)       = endNode;
-                _nodeVector.at(startNodeIndex).outEdgesWeight.at(outEdgeIndex) = weight;
-
-                //Set inEdge in the endNode
-                _nodeVector.at(endNodeIndex).inEdges.at(inEdgeIndex) = startNode;
-
-                //Increment both indices
-                _nodeVector.at(startNodeIndex).outEdgesIndex++;
-                _nodeVector.at(endNodeIndex).inEdgesIndex++;
-            }
+            //Increment both indices
+            _nodeEdgeStorageVector.at(startNodeIndex).outEdgesIndex++;
+            _nodeEdgeStorageVector.at(endNodeIndex).inEdgesIndex++;
         }
-    }
-
-    void o5mFile::PushEdgesInNodesThread(uint64_t threadCount, uint64_t chunkSize)
-    {
-        uint64_t startIndex = threadCount * chunkSize;
-
-        for(uint64_t i = startIndex; i < startIndex + chunkSize; i++)
-        {
-            ProcessEdge(i);
-            _localProgress++;
-            _globalProgress = (double)_localProgress/(double)_edgeVector.size();
-        }
-    }
-
-    void o5mFile::ResetDeltaCounters()
-    {
-        _nodeDeltaCounter    = 0;
-        _wayDeltaCounter     = 0;
-        _refNodeDeltaCounter = 0;
     }
 
     void o5mFile::ProcessNode(const std::vector<uint8_t>& nodeData, uint64_t dataLength)
@@ -139,6 +113,7 @@ namespace Core
         //Save node
         Node_t node{nodeCount, _nodeDeltaCounter, currentLat, currentLon, oldIndex};
         _nodeVector.push_back(node);
+        _nodeEdgeStorageVector.emplace_back(nodeCount);
     }
 
     void o5mFile::ProcessWay(const std::vector<uint8_t>& wayData, uint64_t dataLength)
@@ -198,6 +173,8 @@ namespace Core
                         Edge_t edge{startEdge, _refNodeDeltaCounter, lengthOfRefSection};
                         _edgeVector.push_back(edge);
 
+                        ProcessEdge(edge);
+
                         //Set new starting edge
                         startEdge = _refNodeDeltaCounter;
                     }
@@ -218,5 +195,12 @@ namespace Core
             Way_t way{wayCount, _wayDeltaCounter, refNodeCount};
             _wayVector.push_back(way);
         #endif
+    }
+
+    void o5mFile::ResetDeltaCounters()
+    {
+        _nodeDeltaCounter    = 0;
+        _wayDeltaCounter     = 0;
+        _refNodeDeltaCounter = 0;
     }
 }

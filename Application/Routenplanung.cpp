@@ -6,34 +6,36 @@
 int32_t main()
 {
     // --- stxxl config -> taken from: https://stxxl.org/tags/1.4.1/install_config.html
-#ifdef _WIN32
-    stxxl::config * cfg = stxxl::config::get_instance();
-    stxxl::disk_config disk_win("disk=C:\\Users\\maxib\\stxxl.tmp, 20 GiB, wincall delete");
-    cfg->add_disk(disk_win);
-#elif __linux__
-    stxxl::config * cfg = stxxl::config::get_instance();
-    stxxl::disk_config disk1("disk=/tmp/stxxl.tmp, 20 GiB, syscall unlink");
-    disk1.direct = stxxl::disk_config::DIRECT_ON;
-    cfg->add_disk(disk1);
-#endif
+    #ifdef _WIN32
+        stxxl::config * cfg = stxxl::config::get_instance();
+        stxxl::disk_config disk_win("disk=C:\\Users\\maxib\\stxxl.tmp, 2 GiB, wincall delete");
+        cfg->add_disk(disk_win);
+    #elif __linux__
+        stxxl::config * cfg = stxxl::config::get_instance();
+        stxxl::disk_config disk1("disk=/tmp/stxxl.tmp, 2 GiB, syscall unlink");
+        disk1.direct = stxxl::disk_config::DIRECT_ON;
+        cfg->add_disk(disk1);
+    #endif
 
     Core::Logger::Init();
     LOG(INFO) << "#############\t Routenplanung \t\t#############";
 
     //--- General
     Core::o5mFile duesseldorfStreets;
-    duesseldorfStreets.ReadIn("../Res/regbez-duesseldorf-streets-clean0.o5m");
+    duesseldorfStreets.ReadIn("../Res/regbez-duesseldorf-hard-filtered.o5m");
     duesseldorfStreets.DisplayStatistics();
 
     //duesseldorfStreets.SortEdgesStartAscending();
-    //duesseldorfStreets.PushEdgesInNodes();
-    //duesseldorfStreets.FindNodesOfRankTwo(); //Deleted for now => is in source control if needed again
+    //duesseldorfStreets.FindNodesOfRankTwo();      //Deleted for now => is in source control if needed again
 
-    //--- Nodes
+    //--- Displaying
     //duesseldorfStreets.DisplayAllNodes();
     duesseldorfStreets.DisplayFirstThreeNodes();
     duesseldorfStreets.DisplayLastThreeNodes();
     duesseldorfStreets.DisplayLastThreeStringTableEntries();
+    duesseldorfStreets.DisplayAllNodeEdges(10065266642);
+    duesseldorfStreets.DisplayFirstThreeWays();
+    duesseldorfStreets.DisplayLastThreeWays();
 
     //--- Geohash
     //auto hashval = Core::Utility::geohash(48.99885, 27.53426, 9);

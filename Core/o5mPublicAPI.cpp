@@ -7,10 +7,11 @@ namespace Core
     o5mFile::o5mFile()
     {
         //Reserve space
-        _nodeVector.reserve(20000000);
-        _nodeMap.reserve(20000000);
-        _wayVector.reserve(4000000);
-        _edgeVector.reserve(25000000);
+        _nodeVector.reserve(1500000);
+        _nodeEdgeStorageVector.reserve(1500000);
+        _nodeMap.reserve(1500000);
+        _wayVector.reserve(300000);
+        _edgeVector.reserve(1500000);
 
         //Init string pair table
         for(uint32_t i = 0; i < STRING_TABLE_SIZE; i++)
@@ -64,7 +65,7 @@ namespace Core
                 }
 
                 //Process node
-                else if(currentByte[0] == 16 && !processWays && _nodeVector.size() < MAX_AMOUNT_OF_NODES)
+                else if(currentByte[0] == 16 && !processWays)
                 {
                     //Read next byte (should be the length of the payload)
                     file.read((char*)&currentByte[0], sizeof(uint8_t));
@@ -109,7 +110,7 @@ namespace Core
                 }
 
                 //Process way
-                else if(currentByte[0] == 17 && _wayVector.size() < TEST_AMOUNT_OF_WAYS)
+                else if(currentByte[0] == 17)
                 {
                     processWays = true;
 
@@ -197,43 +198,6 @@ namespace Core
                   {return a.endNode < b.endNode;});
     }
 
-    void o5mFile::PushEdgesInNodes()
-    {
-        LOG(INFO) << "Start data transforming ...";
-
-        //Create chunks
-        uint64_t chunkSize = _edgeVector.size() / NUMBER_OF_THREADS;
-
-        //Init progress variables and create displaying thread
-        _globalProgress   = 0;
-        _localProgress    = 0;
-        _runDisplayThread = true;
-        std::thread displayThread(&o5mFile::DisplayProgressThread, this);
-
-        //Storage
-        std::thread threads[NUMBER_OF_THREADS];
-
-        LOG(INFO) << "Create " << NUMBER_OF_THREADS << " threads ...";
-
-        //Create threads
-        for(uint64_t i = 0; i < NUMBER_OF_THREADS; i++)
-        {
-            threads[i] = std::thread(&o5mFile::PushEdgesInNodesThread, this, i, chunkSize);
-        }
-
-        //Wait for threads to finish
-        for(auto& thread : threads)
-        {
-            thread.join();
-        }
-
-        _runDisplayThread = false;
-        displayThread.join();
-
-        LOG(INFO) << "Joined all threads!";
-        std::cout << "\n";
-    }
-
     uint64_t o5mFile::GetNodeIndex(uint64_t osmID)
     {
         return _nodeMap.at(osmID);
@@ -247,6 +211,16 @@ namespace Core
     const nodeVec_t* o5mFile::GetNodeVectorConst()
     {
         return &_nodeVector;
+    }
+
+    nodeEdgeStorageVec_t* o5mFile::GetNodeEdgeStorageVector()
+    {
+        return &_nodeEdgeStorageVector;
+    }
+
+    const nodeEdgeStorageVec_t* o5mFile::GetNodeEdgeStorageVectorConst()
+    {
+        return &_nodeEdgeStorageVector;
     }
 
     stringPairTable_t* o5mFile::GetStringPairTable()

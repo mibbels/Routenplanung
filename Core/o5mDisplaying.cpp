@@ -20,9 +20,6 @@ namespace Core
     {
         printf("osmID: %11lu | lat: %2.7f | lon: %2.7f | NodeIndex: %8lu \n", node.osmID, node.lat, node.lon, node.index);
 
-        printf("1. InEdge: %11lu | 1. OutEdge: %11lu | Weight: %3lu\n",
-               node.inEdges.at(0), node.outEdges.at(0), node.outEdgesWeight.at(0));
-
         if(node.stringTableIndex != 0)
         {
             printf("\t\t\t k=\"%s\", v=\"%s\"\n",
@@ -202,5 +199,28 @@ namespace Core
         }
 
         std::cout << "\n";
+    }
+
+    void o5mFile::DisplayAllNodeEdges(uint64_t osmID)
+    {
+        LOG(INFO) << "#############\t Edges of osmID: " << osmID << "\t#############";
+
+        uint64_t index = GetNodeIndex(osmID);
+
+        std::cout << "InEdges: ";
+
+        for(uint8_t i = 0; i < _nodeEdgeStorageVector.at(index).inEdgesIndex; i++)
+        {
+            printf("%11lu,", _nodeEdgeStorageVector.at(index).inEdges.at(i));
+        }
+
+        std::cout << "\nOutEdges: ";
+
+        for(uint8_t i = 0; i < _nodeEdgeStorageVector.at(index).outEdgesIndex; i++)
+        {
+            printf("%11lu (w: %lu),", _nodeEdgeStorageVector.at(index).outEdges.at(i), _nodeEdgeStorageVector.at(index).outEdgesWeight.at(i));
+        }
+
+        std::cout << "\n\n";
     }
 }

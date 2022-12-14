@@ -1,0 +1,7 @@
+//=========== Mit allem //===========
+
+osmfilter regbez-duesseldorf.o5m --drop-author --keep-relations="restriction" --keep="route=Ferry =shuttle_train highway=motorway =trunk =primary =secondary =tertiary =unclassified =residential =motorway_link =trunk_link =primary_link =secondary_link =tertiary_link =living_street =service" -o=regbez-duesseldorf-hard-filtered.o5m
+
+//=========== Mit gefilterten tags und ohne relations //===========
+
+osmfilter regbez-duesseldorf.o5m --drop-tags="ref* TMC* distance created_by crossing* tactile_paving traffic_* website wheelchair shelter opening_hours foot surface kerb railway public_transport bicycle barrier lit* motor* postal_code sidewalk note zone* source* name:* parking:* bus* button_operated covered cycleway service wikidata* bicycle:* vehicle:* width:* smoothness operator indoor turn:* tunnel local_ref network vrr:*" --drop-author --drop-relations --keep="route=Ferry =shuttle_train highway=motorway =trunk =primary =secondary =tertiary =unclassified =residential =motorway_link =trunk_link =primary_link =secondary_link =tertiary_link =living_street =service" -o=regbez-duesseldorf-hard-filtered.osm

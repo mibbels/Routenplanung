@@ -18,10 +18,6 @@
 
 namespace Core
 {
-    #define MAX_AMOUNT_OF_NODES 17567130
-    #define MAX_AMOUNT_OF_WAYS  3137873
-    #define TEST_AMOUNT_OF_WAYS 1000
-    #define NUMBER_OF_THREADS   16
     #define SAVE_WAYS
     #define SAVE_ALL_EDGES
 
@@ -34,6 +30,7 @@ namespace Core
             stringPairTable_t     _stringPairTable;             //The string reference table
             uint32_t              _currentTableIndex   = 1;     //Index into the string reference table
             nodeMap_t             _nodeMap;                     //Node mapping (osmID, index)
+            nodeEdgeStorageVec_t  _nodeEdgeStorageVector;       //Edge storage for all the nodes
             wayVec_t              _wayVector;                   //Way storage
             edgeVec_t             _edgeVector;                  //Edge storage
             uint64_t              _nodeDeltaCounter    = 0;     //Delta encoding number for the node id
@@ -41,15 +38,12 @@ namespace Core
             uint64_t              _refNodeDeltaCounter = 0;     //Delta encoding number for the referenced nodes in the ways
             std::atomic<bool>     _runDisplayThread    = false; //Starts and stops the display progress thread
             std::atomic<double>   _globalProgress      = 0.0;   //Displayed progress
-            std::atomic<uint64_t> _localProgress       = 0;     //Progress local to the chunk size of each thread
-            std::mutex            _nodeVectorMutex;             //Mutex to lock the node vector completely
 
             //--- Internal data processing
-            void ProcessEdge(uint64_t edgeIndex);
-            void PushEdgesInNodesThread(uint64_t threadCount, uint64_t chunkSize);
-            void ResetDeltaCounters();
+            void ProcessEdge(const Edge_t& edge);
             void ProcessNode(const std::vector<uint8_t>& nodeData, uint64_t dataLength);
             void ProcessWay (const std::vector<uint8_t>& wayData,  uint64_t dataLength);
+            void ResetDeltaCounters();
 
             //--- Internal displaying
             void DisplayProgressThread();
@@ -61,17 +55,18 @@ namespace Core
 
             //--- Public API
             o5mFile();
-            void               ReadIn(const std::string& filepath);
-            void               SortEdgesStartAscending();
-            void               SortEdgesEndAscending();
-            void               PushEdgesInNodes();
-            uint64_t           GetNodeIndex(uint64_t osmID);
-            nodeVec_t*         GetNodeVector();
-            const nodeVec_t*   GetNodeVectorConst();
-            stringPairTable_t* GetStringPairTable();
-            wayVec_t*          GetWayVector();
-            edgeVec_t*         GetEdgeVector();
-            const edgeVec_t*   GetEdgeVectorConst();
+            void                        ReadIn(const std::string& filepath);
+            void                        SortEdgesStartAscending();
+            void                        SortEdgesEndAscending();
+            uint64_t                    GetNodeIndex(uint64_t osmID);
+            nodeVec_t*                  GetNodeVector();
+            const nodeVec_t*            GetNodeVectorConst();
+            nodeEdgeStorageVec_t*       GetNodeEdgeStorageVector();
+            const nodeEdgeStorageVec_t* GetNodeEdgeStorageVectorConst();
+            stringPairTable_t*          GetStringPairTable();
+            wayVec_t*                   GetWayVector();
+            edgeVec_t*                  GetEdgeVector();
+            const edgeVec_t*            GetEdgeVectorConst();
 
             //--- Public displaying
             void DisplayStatistics();
@@ -85,5 +80,6 @@ namespace Core
             void DisplayFirstThreeEdges();
             void DisplayLastThreeEdges();
             void DisplayLastThreeStringTableEntries();
+            void DisplayAllNodeEdges(uint64_t osmID);
     };
 }
