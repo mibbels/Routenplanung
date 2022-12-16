@@ -43,10 +43,18 @@ int32_t main()
     //auto decoded = Core::Utility::geohash_decode(hashval, 9);
 
     //--- Graph
-    //TestGraph("../Res/graph.txt");
-    //Core::graph g;
-    //g.create(duesseldorfStreets);
-    //g.DijkstraShortestPath(143598317, 143598305, duesseldorfStreets);
+    Core::graph g;
+    g.create(duesseldorfStreets);
+    // 19, Weinheimer Straße nach 10, Weilburger Weg
+    // 253026066 nach 1026008204
+
+    //Kronprinzenstraße 48 nach Jahnstraße 62
+    // 8839776766 nach 3578141726
+
+    auto sp = g.DijkstraShortestPath(8839776766, 3578141726, duesseldorfStreets);
+
+    for (uint64_t node: sp)
+        LOG(INFO) << node;
 
     return 0;
 }

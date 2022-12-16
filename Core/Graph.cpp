@@ -5,7 +5,10 @@ namespace Core
     //--------------------------------------------------------------------------------------------------------------------//
     void graph::create(o5mFile &a_file)
     {
-        m_nodeVec = a_file.GetNodeVectorConst();
+        m_nodeVec =               a_file.GetNodeVectorConst();
+        m_nodeEdgeStorageVector = a_file.GetNodeEdgeStorageVectorConst();
+
+        /*
         m_edgeVec = a_file.GetEdgeVectorConst();
         auto it = m_edgeVec->begin();
 
@@ -42,6 +45,7 @@ namespace Core
             m_mapEdges.insert(std::make_pair(iCurrStartNodeIndex, vecNeighbourCodes));
         }
         LOG(INFO) << "Created graph mapping";
+        */
     }
 
     //--------------------------------------------------------------------------------------------------------------------//
@@ -53,7 +57,7 @@ namespace Core
         i64Vec_t                vecDistance;
         i64Vec_t                vecPreviousNode;
 
-        uint64_t                uiNodeIndex;
+        int64_t                uiNodeIndex;
         uint64_t                uiNodeOsmID;
         uint64_t                uiStartIndex = a_file.GetNodeIndex(a_uiStartOsmID);
         uint64_t                uiEndIndex   = a_file.GetNodeIndex(a_uiEndOsmID);
@@ -62,50 +66,22 @@ namespace Core
         vecDistance.resize(m_nodeVec->size());
         vecVisited.resize(m_nodeVec->size());
 
-
+        /*
         const unsigned int mem_for_pools = 16 * 1024 * 1024;
         stxxl::read_write_pool<pqueue_type::block_type>
                 pool((mem_for_pools / 2) / pqueue_type::block_type::raw_size,
                      (mem_for_pools / 2) / pqueue_type::block_type::raw_size);
 
         pqueue_type PQ(pool);
+        */
 
-        /*
         auto compare  = []
                 (const uint64tuple_t& a, const uint64tuple_t& b)
                 {
                     return a.second > b.second;
                 };
         std::priority_queue<uint64tuple_t, std::vector<uint64tuple_t>, decltype(compare)> PQ(compare );
-        */
 
-
-        LOG(INFO) << "---------";
-
-        /*
-        auto it = m_nodeVec->begin();
-
-        while (it != m_nodeVec->end())
-        {
-            uiNodeIndex= (*it).index;
-
-            if (uiNodeIndex != uiStartIndex)
-            {
-                //add placeholder "inf"
-                vecDistance[uiNodeIndex] = INT64_MAX * .6;
-            }
-            else
-            {
-                vecDistance[uiNodeIndex] = 0;
-            }
-            // add placeholder "NULL"
-            vecPreviousNode[uiNodeIndex] = -1;
-
-            PQ.push(uint64tuple_t(uiNodeIndex, vecDistance[uiNodeIndex]));
-
-            it++;
-        }
-         */
 
         i64Vec_t::bufwriter_type distWriter(vecDistance);
         i64Vec_t::bufwriter_type prevWriter(vecPreviousNode);
@@ -125,7 +101,6 @@ namespace Core
         vecDistance[uiStartIndex] = 0;
         PQ.push(uint64tuple_t(uiStartIndex, 0)); // !!!!!!!!!!!
 
-        LOG(INFO) << "Filled PQ!";
 
         //std::vector<uint64_t> vecNeighbours;
         std::vector<Edge_t> vecNeighbours;
@@ -140,48 +115,46 @@ namespace Core
             count++;
             if (count == 100000)
             {
-                PQ.dump_sizes();
+                //PQ.dump_sizes();
                 //LOG(INFO) << PQ.size();
                 count = 0;
             }
 
-
             // keep track of visited nodes, as to not unnecessarily visit old elements (see further down)
-
             if (!vecVisited[pairNodeDist.first])
             {
                 vecVisited[pairNodeDist.first] = true;
             }
             else
             {
-                continue;
+                //continue;
             }
 
-           vecNeighbours = m_mapEdges[pairNodeDist.first]; // lookup needed?}
+           auto edgeStorage = m_nodeEdgeStorageVector->at(pairNodeDist.first);
 
-            //for (uint64_t iEndNode : vecNeighbours)
-            for (Edge_t e : vecNeighbours)
+            for (int i = 0; i < edgeStorage.outEdgesIndex; i++)
             {
-                uint64_t uiWeight = e.weight;
-                uint64_t uiEdgeEndNodeIndex = a_file.GetNodeIndex(e.endNode);
+
+                uint64_t uiWeight = edgeStorage.outEdgesWeight[i];
+                uint64_t uiEdgeEndNodeIndex = a_file.GetNodeIndex(edgeStorage.outEdges[i]);
 
                 iAltDistance = uiWeight + vecDistance[pairNodeDist.first];
 
                 if (iAltDistance < vecDistance[uiEdgeEndNodeIndex])
                 {
                     vecDistance[uiEdgeEndNodeIndex] = iAltDistance;
+
                     vecPreviousNode[uiEdgeEndNodeIndex] = pairNodeDist.first;
 
                      //stxxl pqueue does not implement a decrease-key type function
                      // old element remains as dead weight
 
                     PQ.push(uint64tuple_t(uiEdgeEndNodeIndex, iAltDistance));
-                    LOG(INFO) << "Update PQ!";
+                    //LOG(INFO) << "Update PQ!";
                 }
             }
         }
 
-        LOG(INFO) << "Found shortest path!";
 
         uiNodeIndex = uiEndIndex;
         while (uiNodeIndex != uiStartIndex)
@@ -197,7 +170,7 @@ namespace Core
 
         std::reverse(vecShortestPath.begin(), vecShortestPath.end());
 
-        LOG(INFO) << "vecDistance[uiEndIndex]: " << vecDistance[uiEndIndex];
+        LOG(INFO) << "Distance: " << vecDistance[uiEndIndex];
 
         return vecShortestPath;
     }

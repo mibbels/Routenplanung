@@ -50,9 +50,10 @@ namespace Core
 
     private:
 
-        const nodeVec_t                                     *m_nodeVec;
-        const wayVec_t                                      *m_wayVec;
-        const edgeVec_t                                     *m_edgeVec;
+        const nodeVec_t             *m_nodeVec;
+        const wayVec_t              *m_wayVec;
+        const edgeVec_t             *m_edgeVec;
+        const nodeEdgeStorageVec_t  *m_nodeEdgeStorageVector;
 
         //test with heap-version first
         //std::unordered_map<uint64_t, std::vector<uint64_t>> m_mapEdges;
