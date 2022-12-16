@@ -51,7 +51,10 @@ int32_t main()
     //Kronprinzenstraße 48 nach Jahnstraße 62
     // 8839776766 nach 3578141726
 
-    auto sp = g.DijkstraShortestPath(8839776766, 3578141726, duesseldorfStreets);
+    // weiter weg:
+    //68, Rheindorfer Straße, Langenfeld nach 23, Klosterstraße, Elten
+    // 127791698 nach 320296431
+    auto sp = g.DijkstraShortestPath(127791698, 320296431, duesseldorfStreets);
 
     for (uint64_t node: sp)
         LOG(INFO) << node;
