@@ -1,13 +1,12 @@
 #pragma once
 
-#include <mutex>
-
 #include "stxxl.h"
 
 namespace Core
 {
     #define STRING_TABLE_SIZE   20000
     #define MAX_AMOUNT_OF_EDGES 32
+    #define WEIGHT_FACTOR       100000
 
     struct __attribute__((__packed__)) Node_t
     {
@@ -22,7 +21,7 @@ namespace Core
             : index(p_index), osmID(p_osmID), lat(p_lat), lon(p_lon), stringTableIndex(p_stringTableIndex){}
     };
 
-    struct NodeEdgeStorage_t
+    struct __attribute__((__packed__)) NodeEdgeStorage_t
     {
         uint64_t index;
         uint8_t  inEdgesIndex;
@@ -30,11 +29,10 @@ namespace Core
         std::array<uint64_t, MAX_AMOUNT_OF_EDGES> inEdges;
         std::array<uint64_t, MAX_AMOUNT_OF_EDGES> outEdges;
         std::array<uint64_t, MAX_AMOUNT_OF_EDGES> outEdgesWeight; //Cost to reach the node located at the corresponding index
-        bool     isGettingUsed;
 
         NodeEdgeStorage_t() = default;
         explicit NodeEdgeStorage_t(uint64_t p_index)
-            : index(p_index), inEdgesIndex(0), outEdgesIndex(0), inEdges({0}), outEdges({0}), outEdgesWeight({0}), isGettingUsed(false){}
+            : index(p_index), inEdgesIndex(0), outEdgesIndex(0), inEdges({0}), outEdges({0}), outEdgesWeight({0}){}
     };
 
     struct Way_t
@@ -59,13 +57,13 @@ namespace Core
     typedef stxxl::VECTOR_GENERATOR<float>::result   f32Vec_t;
     typedef stxxl::VECTOR_GENERATOR<double>::result  f64Vec_t;
     typedef stxxl::VECTOR_GENERATOR<Node_t>::result  nodeVec_t;
-    typedef std::vector<NodeEdgeStorage_t>           nodeEdgeStorageVec_t;
     typedef stxxl::VECTOR_GENERATOR<Way_t>::result   wayVec_t;
     typedef stxxl::VECTOR_GENERATOR<Edge_t>::result  edgeVec_t;
 
     typedef std::pair<std::string, std::string>         stringPair_t;
     typedef std::array<stringPair_t, STRING_TABLE_SIZE> stringPairTable_t;
-    typedef std::unordered_map<uint64_t, uint64_t>      nodeMap_t;          //Node mapping (osmID, index)
+    typedef std::unordered_map<uint64_t, uint64_t>      nodeMap_t;              //Node mapping (osmID, index)
+    typedef std::vector<NodeEdgeStorage_t>              nodeEdgeStorageVec_t;
 
     typedef stxxl::tuple<uint64_t, uint64_t> uint64tuple_t;
 
@@ -83,6 +81,4 @@ namespace Core
     };
 
     typedef stxxl::PRIORITY_QUEUE_GENERATOR<uint64tuple_t, cmpGreateruint64tuple, 128*1024*1024, 19000000/1024>::result pqueue_type;
-
-
 }

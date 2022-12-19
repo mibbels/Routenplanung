@@ -49,6 +49,14 @@ namespace Core
         return true;
     }
 
+    uint64_t Utility::CalculateWeight(const Node_t& n1, const Node_t& n2)
+    {
+        double dist1 = fabs(n1.lat - n2.lat);
+        double dist2 = fabs(n1.lon - n2.lon);
+
+        return (uint64_t)((dist1 + dist2) * WEIGHT_FACTOR);
+    }
+
     void Utility::Display_ui8Vec(const std::vector<uint8_t>& vector, uint8_t numberOfBytes)
     {
         //Sanity check

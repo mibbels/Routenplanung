@@ -21,12 +21,8 @@ int32_t main()
     LOG(INFO) << "#############\t Routenplanung \t\t#############";
 
     //--- General
-    Core::o5mFile duesseldorfStreets;
-    duesseldorfStreets.ReadIn("../Res/regbez-duesseldorf-hard-filtered.o5m");
+    Core::o5mFile duesseldorfStreets("../Res/regbez-duesseldorf-hard-filtered.o5m");
     duesseldorfStreets.DisplayStatistics();
-
-    //duesseldorfStreets.SortEdgesStartAscending();
-    //duesseldorfStreets.FindNodesOfRankTwo();      //Deleted for now => is in source control if needed again
 
     //--- Displaying
     //duesseldorfStreets.DisplayAllNodes();

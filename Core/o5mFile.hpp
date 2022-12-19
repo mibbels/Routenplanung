@@ -5,7 +5,6 @@
 #include <chrono>
 #include <map>
 #include <algorithm>
-#include <mutex>
 
 #include "Datatypes.hpp"
 #include "Logger.hpp"
@@ -40,6 +39,7 @@ namespace Core
             std::atomic<double>   _globalProgress      = 0.0;   //Displayed progress
 
             //--- Internal data processing
+            void ReadIn(const std::string& filepath);
             void ProcessEdge(const Edge_t& edge);
             void ProcessNode(const std::vector<uint8_t>& nodeData, uint64_t dataLength);
             void ProcessWay (const std::vector<uint8_t>& wayData,  uint64_t dataLength);
@@ -54,8 +54,7 @@ namespace Core
         public:
 
             //--- Public API
-            o5mFile();
-            void                        ReadIn(const std::string& filepath);
+            o5mFile(const std::string& filepath);
             void                        SortEdgesStartAscending();
             void                        SortEdgesEndAscending();
             uint64_t                    GetNodeIndex(uint64_t osmID);

@@ -14,6 +14,7 @@ namespace Core
             static bool     BitIsSet(uint32_t value, uint32_t index);
             static bool     ArrayGotValue(const uint8_t* arr, uint8_t length, uint8_t index);
             static bool     ArrayCompareContent(const uint8_t* fileData, const uint8_t* compareData, uint8_t dataSize);
+            static uint64_t CalculateWeight(const Node_t& n1, const Node_t& n2);
 
             //--- Data visualization
             static void    Display_ui8Vec(const std::vector<uint8_t>& vector, uint8_t numberOfBytes);
