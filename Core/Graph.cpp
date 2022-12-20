@@ -156,6 +156,7 @@ namespace Core
         }
 
 
+
         uiNodeIndex = uiEndIndex;
         while (uiNodeIndex != uiStartIndex)
         {
@@ -171,6 +172,11 @@ namespace Core
         std::reverse(vecShortestPath.begin(), vecShortestPath.end());
 
         LOG(INFO) << "Distance: " << vecDistance[uiEndIndex];
+
+        vecVisited.flush();
+        vecDistance.flush();
+        vecPreviousNode.flush();
+
 
         return vecShortestPath;
     }
