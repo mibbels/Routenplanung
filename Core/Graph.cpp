@@ -181,122 +181,123 @@ namespace Core
         return vecShortestPath;
     }
 
-    /*
+
     //--------------------------------------------------------------------------------------------------------------------//
-    int h(int a_iCurrentNode, int a_iEndNode)
+    int h(uint64_t a_uiCurrentNode, uint64_t a_uiEndNode, o5mFile &a_file)
     {
-        // * heuristic-function estimating the cost of navigating from current- to end-node.
-        // * if h(x,y) = 0 for all Nodes x,y, a* algorithm equals dijkstra's algorithm.
-        // *
-        // * an example for a heuristic could b the absolute or quadratic difference between the x,y coordinates
-        // * of the nodes.
-        //
+        Node_t n1 = a_file.GetNode(a_uiCurrentNode);
+        Node_t n2 = a_file.GetNode(a_uiEndNode);
 
-         return 0;
+        double dist1 = fabs(n1.lat - n2.lat);
+        double dist2 = fabs(n1.lon - n2.lon);
+
+        return (uint64_t)((dist1 + dist2) * WEIGHT_FACTOR);
     }
-    std::vector<node*> graph::a_starShortestPath(std::string a_strStartNodeName, std::string a_strEndNodeName)
+    std::vector<uint64_t> graph::a_starShortestPath(uint64_t a_uiStartOsmID, uint64_t a_uiEndOsmID, o5mFile &a_file)
     {
-        std::vector<node*>      vecShortestPath;
-        std::unordered_set<int> setVisited;
+        std::vector<uint64_t>   vecShortestPath;
+        std::vector<Edge_t>     vecNeighbours;
+        booleanVec_t            vecVisited;
+        i64Vec_t                vecDistance;
+        i64Vec_t                vecPreviousNode;
 
-        int                     iNodeCode;
-        int                     derivedDistance;
-        int                     guessedDistance;
-        int iStartNodeHash =    m_mapStringHashes.at(a_strStartNodeName);
-        int iEndNodeHash =      m_mapStringHashes.at(a_strEndNodeName);
+        int64_t                 uiNodeIndex;
+        uint64_t                uiNodeOsmID;
+        uint64_t                uiStartIndex = a_file.GetNodeIndex(a_uiStartOsmID);
+        uint64_t                uiEndIndex   = a_file.GetNodeIndex(a_uiEndOsmID);
+        uint64_t                uiAltDistance = 0;
+        uint64_t                uiGuessedDistance = 0;
 
-        auto compare  = [](std::pair<int, int> a, std::pair<int, int> b){return a.second > b.second;};
-        std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, decltype(compare)> openlist(compare );
+        vecPreviousNode.resize(m_nodeVec->size());
+        vecDistance.resize(m_nodeVec->size());
+        vecVisited.resize(m_nodeVec->size());
 
-        std::vector<edge*> vecNeighbours;
-        std::unordered_map<int, int> mapDistance;
-        //std::unordered_map<int, int> mapGuessedDistance;
-        std::unordered_map<int, int> mapPreviousNode;
-
-        mapPreviousNode.reserve(m_mapNodes.size());
-        mapDistance.reserve(m_mapNodes.size());
-        //mapGuessedDistance.reserve(m_mapNodes.size());
-
-        for (std::pair<int, node*> NodeEntry: m_mapNodes)
+        auto compare  = []
+                (const uint64tuple_t& a, const uint64tuple_t& b)
         {
-            iNodeCode = NodeEntry.second->m_iNameCode;
-            if (iNodeCode != iStartNodeHash)
-            {
-                mapDistance[iNodeCode] = INT_MAX/2;
-                //mapGuessedDistance[iNodeCode] = INT_MAX;
-            }
-            else
-            {
-                mapDistance[iNodeCode] = 0;
-                //mapGuessedDistance[iNodeCode] = 0;
-            }
+            return a.second > b.second;
+        };
+        std::priority_queue<uint64tuple_t, std::vector<uint64tuple_t>, decltype(compare)> PQ(compare );
 
-            mapPreviousNode[iNodeCode] = NULL;
-            openlist.push(std::make_pair(iNodeCode, mapDistance[iNodeCode]));
+        i64Vec_t::bufwriter_type        distWriter(vecDistance);
+        i64Vec_t::bufwriter_type        prevWriter(vecPreviousNode);
+        booleanVec_t::bufwriter_type    visitWriter(vecVisited);
+
+        for (uint64_t i = 0; i < m_nodeVec->size(); i++)
+        {
+            distWriter << INT64_MAX * .6;
+            prevWriter << -1LL;
+            visitWriter << false;
+            PQ.push(uint64tuple_t(i, INT64_MAX * .6));
         }
+        distWriter.finish();
+        visitWriter.finish();
+        visitWriter.finish();
 
-        while (openlist.size() != 0)
+        vecDistance[uiStartIndex] = 0;
+        PQ.push(uint64tuple_t(uiStartIndex, 0));
+
+
+        while(PQ.size() != 0)
         {
-            std::pair<int, int> PQNodePair = openlist.top();
-            openlist.pop();
+            uint64tuple_t pairNodeDist = PQ.top();
+            PQ.pop();
 
-            if (setVisited.find(PQNodePair.first) == setVisited.end())
+            // keep track of visited nodes, as to not unnecessarily visit old elements (see further down)
+            if (!vecVisited[pairNodeDist.first])
             {
-                setVisited.insert(PQNodePair.first);
+                vecVisited[pairNodeDist.first] = true;
             }
             else
             {
-                continue;
+                //continue;
             }
 
-            try
-            {
-                //vecNeighbours = m_mapEdges.at(PQNodePair.first);
-                vecNeighbours = m_mapEdges[PQNodePair.first]->edges;
-            }
-            catch(std::out_of_range)
-            {
-                continue;
-            }
+            auto edgeStorage = m_nodeEdgeStorageVector->at(pairNodeDist.first);
 
-            for (edge* e : vecNeighbours)
+            for (int i = 0; i < edgeStorage.outEdgesIndex; i++)
             {
+                uint64_t uiWeight = edgeStorage.outEdgesWeight[i];
+                uint64_t uiEdgeEndNodeIndex = a_file.GetNodeIndex(edgeStorage.outEdges[i]);
 
-                derivedDistance = mapDistance.at(PQNodePair.first) + e->m_uiWeight;
-                if (derivedDistance < mapDistance.at(e->m_iNameCodeEnd))
+                uiAltDistance = uiWeight + vecDistance[pairNodeDist.first];
+
+                if (uiAltDistance < vecDistance[uiEdgeEndNodeIndex])
                 {
-                    mapPreviousNode[e->m_iNameCodeEnd] = PQNodePair.first;
-                    mapDistance.at(e->m_iNameCodeEnd) = derivedDistance;
+                    vecDistance[uiEdgeEndNodeIndex] = uiAltDistance;
+                    vecPreviousNode[uiEdgeEndNodeIndex] = pairNodeDist.first;
 
-                    // guess the presumed cost of navigating from the neighbour to the end-node
-                    //
-                    guessedDistance = derivedDistance + h(e->m_iNameCodeEnd,iEndNodeHash);
-                    //mapGuessedDistance.at(e->m_iNameCodeEnd) = guessedDistance; //unnecessary?
+                    uiGuessedDistance = uiAltDistance + h(uiEdgeEndNodeIndex,uiEndIndex, a_file);
 
-                    openlist.push(std::make_pair(e->m_iNameCodeEnd, guessedDistance));
+                    PQ.push(uint64tuple_t(uiEdgeEndNodeIndex, uiGuessedDistance));
                 }
             }
         }
 
-        iNodeCode = iEndNodeHash;
-        while (iNodeCode != iStartNodeHash)
+        uiNodeIndex = uiEndIndex;
+        while (uiNodeIndex != uiStartIndex)
         {
-            //vecShortestPath.push_back(m_mapNodes.at(iNodeCode));
-            vecShortestPath.push_back(m_mapNodes[iNodeCode]);
-            iNodeCode = mapPreviousNode.at(iNodeCode);
+            vecShortestPath.push_back(m_nodeVec->at(uiNodeIndex).osmID);
+            uiNodeIndex = vecPreviousNode[uiNodeIndex];
 
-            if (iNodeCode == iStartNodeHash)
+            if (uiNodeIndex == uiStartIndex)
             {
-                //vecShortestPath.push_back(m_mapNodes.at(iNodeCode));
-                vecShortestPath.push_back(m_mapNodes[iNodeCode]);
+                vecShortestPath.push_back(m_nodeVec->at(uiNodeIndex).osmID);
             }
         }
 
         std::reverse(vecShortestPath.begin(), vecShortestPath.end());
-        //LOG(INFO) << mapDistance[iEndNodeHash];
+
+        LOG(INFO) << "Distance: " << vecDistance[uiEndIndex];
+
+        vecVisited.flush();
+        vecDistance.flush();
+        vecPreviousNode.flush();
+
         return vecShortestPath;
     }
 
+    /*
     //--------------------------------------------------------------------------------------------------------------------//
     std::vector<node*> graph::BellmanFordShortestPath(std::string a_strStartNodeName, std::string a_strEndNodeName)
     {

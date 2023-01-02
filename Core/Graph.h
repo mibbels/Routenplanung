@@ -41,8 +41,10 @@ namespace Core
                                                    uint64_t a_uiEndOsmID,
                                                    o5mFile &a_file);
 
-        //std::vector<node*> a_starShortestPath(std::string a_strStartNodeName,
-         //                                     std::string a_strEndNodeName);
+        std::vector<uint64_t> a_starShortestPath(uint64_t a_uiStartOsmID,
+                                                 uint64_t a_uiEndOsmID,
+                                                 o5mFile &a_file);
+
 
         //std::vector<node*> BellmanFordShortestPath(std::string a_strStartNodeName,
          //                                          std::string a_strEndNodeName);

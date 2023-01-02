@@ -59,6 +59,7 @@ namespace Core
             void                        SortEdgesEndAscending();
             uint64_t                    GetNodeIndex(uint64_t osmID);
             nodeVec_t*                  GetNodeVector();
+            Node_t                      GetNode(uint64_t nodeIdx);
             const nodeVec_t*            GetNodeVectorConst();
             nodeEdgeStorageVec_t*       GetNodeEdgeStorageVector();
             const nodeEdgeStorageVec_t* GetNodeEdgeStorageVectorConst();

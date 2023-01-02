@@ -53,6 +53,11 @@ namespace Core
         return &_nodeVector;
     }
 
+    Node_t o5mFile::GetNode(uint64_t nodeIdx)
+    {
+        return _nodeVector.at(nodeIdx);
+    }
+
     const nodeVec_t* o5mFile::GetNodeVectorConst()
     {
         return &_nodeVector;

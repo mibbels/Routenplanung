@@ -50,13 +50,22 @@ int32_t main()
     // weiter weg:
     //68, Rheindorfer Straße, Langenfeld nach 23, Klosterstraße, Elten
     // 127791698 nach 320296431
-    auto sp = g.DijkstraShortestPath(390993448, 87271505, duesseldorfStreets);
+    auto djk = g.DijkstraShortestPath(127791698, 320296431, duesseldorfStreets);
 
     std::ofstream outfile;
-    outfile.open ("../Res/route.txt");
+    outfile.open ("../Res/route_dijkstra.txt");
 
     outfile << "node(id:";
-    for (uint64_t node: sp)
+    for (uint64_t node: djk)
+        outfile << node << ",";
+    outfile << "); \n out;";
+    outfile.close();
+
+    auto astar = g.a_starShortestPath(127791698, 320296431, duesseldorfStreets);
+
+    outfile.open ("../Res/route_astar.txt");
+    outfile << "node(id:";
+    for (uint64_t node: djk)
         outfile << node << ",";
     outfile << "); \n out;";
     outfile.close();
