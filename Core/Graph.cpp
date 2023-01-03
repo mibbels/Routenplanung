@@ -96,7 +96,7 @@ namespace Core
         }
         distWriter.finish();
         visitWriter.finish();
-        visitWriter.finish();
+        prevWriter.finish();
 
         vecDistance[uiStartIndex] = 0;
         PQ.push(uint64tuple_t(uiStartIndex, 0)); // !!!!!!!!!!!
@@ -173,9 +173,11 @@ namespace Core
 
         LOG(INFO) << "Distance: " << vecDistance[uiEndIndex];
 
+        /*
         vecVisited.flush();
         vecDistance.flush();
         vecPreviousNode.flush();
+         */
 
 
         return vecShortestPath;
@@ -232,7 +234,7 @@ namespace Core
         }
         distWriter.finish();
         visitWriter.finish();
-        visitWriter.finish();
+        prevWriter.finish();
 
         vecDistance[uiStartIndex] = 0;
         PQ.push(uint64tuple_t(uiStartIndex, 0));
@@ -290,9 +292,11 @@ namespace Core
 
         LOG(INFO) << "Distance: " << vecDistance[uiEndIndex];
 
+        /*
         vecVisited.flush();
         vecDistance.flush();
         vecPreviousNode.flush();
+        */
 
         return vecShortestPath;
     }
